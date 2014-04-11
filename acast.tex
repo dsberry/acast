@@ -167,6 +167,233 @@ WCS \sep data models \sep Starlink
 \label{sec:intro}
 The Starlink AST library \citep{SUN211} ...
 
+
+\section{What is AST?}
+
+AST is a library that provides a generalised scheme for modelling and
+manipulating inter-related coordinate systems. Obvious use in
+astronomy is WCS, but coordinate systems are used in other places too
+(e.g. graphics).  AST includes facilities for importing and (where
+possible) exporting a wide variety of FITS-WCS headers, including
+various popular distortion schemes. AST was first released in 1997
+(see ADASS paper, included in “Twenty Years of ADASS”). So 16 years of
+use within application code including Starlink, DS9 and
+XIMAGE. Interest in more flexible schemes for representing
+inter-related coordinate systems has increased recently (cf astropy
+and alternatives to FITS), so it is a good time to review the lessons
+learned from AST.
+
+Flexible handling of coordinate systems is important for describing
+raw data (distortions etc), but is also very important for allowing
+creative use of coordinate transformations during data analysis. Also
+important for handling of slices, and dimensionality changes.
+
+\section{Key Classes within AST}
+
+\subsection{Key principles}
+
+Distinguish clearly between the purposes of Mappings and Frames.
+
+Think in terms of Frames rather than axes. FITS-WCS tries to maintain
+some sort of 1-to-1 correspondence between pixel axes and WCS axes,
+and specifies the properties of each axis individually. But in general
+there is no such correspondence (think of the case of a square image
+centred on the north pole - which pixel axis corresponds to RA and
+which to Dec?).
+
+\subsection{Frames and Domains}
+
+\subsubsection{What is a Domain?}
+
+A physical space such as “time”, “the sky”, “the EM spectrum”, “the
+focal plane”, “a pixel array”. Points within such a space can in
+general be described using any one of several coordinate systems
+(e.g. the sky can be described using ICRS, Galactic, etc, the EM
+spectrum can be described using freq, wavelength, etc). The “Frame”
+class represents a domain, and should encapsulate all the metadata
+needed to transform a position between any pair of coordinate systems
+that can be used to describe positions within its domain (in
+retrospect, we should have named the class “Domain” rather than
+“Frame”). Thus things like “pixel size” should *not* be stored in a
+Frame (Arnold), since it is a property of the relationship between two
+Frames (a.k.a the Mapping) rather than of the Frame itself.
+
+Basic Frame properties and methods:
+
+\begin{itemize}
+\item Sky, Time and Spec Frames
+\item Compound Frames
+\item Converting between Frames
+\end{itemize}
+
+\subsection{Mappings}
+
+Mapping methods
+
+Atomic Mappings
+
+Compound Mappings (inc. SwitchMaps)
+
+\subsubsection{Simplification}
+
+There are a wide range of possible transformations that could
+potentially be applied to a data set data during analysis. These
+including simple things such as rotation, scaling, shear, etc., but
+could in principle include more complex transformations such as
+re-projection, dis-contiguous “patchwork” transformations, or even
+transformation using a general algebraic expression.  A coordinate
+handling system should make it possible for a user to apply an
+arbitrary set of such transformations in series to a data set, without
+losing track of the coordinates of each data point. With a
+prescriptive scheme such as FITS-WCS this would require each
+transformation to locate the appropriate component of the FITS-WCS
+pixel to world coordinate mapping, and modify the corresponding
+headers in a suitable way. This is often a difficult, if not
+impossible, task. Within AST, the chaining of transformations is
+accomplished simply by creating a Mapping that describes each new
+transformation and concatenating it with the existing pixel to world
+coordinate mapping.
+
+However, by itself this can lead to the mapping becoming increasingly
+complex as transformations are stacked on top of each other. This is
+bad because it leads to 1) slower evaluation of the total
+transformation, 2) less accurate evaluation of the total
+transformation, and 3) more room being needed to store the total
+transformation.  To avoid this, the Mapping class provides a
+“Simplify” method that takes a potentially complex Mapping and
+simplifies it as far as possible. Doing such simplification in a
+general and effective manner is one of the most difficult challenges
+faced by the AST model, but experience has shown that the current
+scheme implemented in AST handles most cases sufficiently well. The
+steps involved in simplification depend on the nature of the component
+Mappings in the total Mapping. Each class of Mapping provides its own
+rules that indicate when and how it can be simplified, or combined
+with an adjacent Mapping in the chain. To illustrate the principle,
+some of the simplest examples include, 1) any Mapping can be combined
+with its own inverse to create a UnitMap, 2) UnitMaps can be removed
+entirely, 3) adjacent MatrixMaps can be combined using matrix
+multiplication to create a single MatrxMap, 4) adjacent ShiftMaps can
+be combined to form a single ShiftMap.
+
+The whole simplification process is managed by the Simplify method of
+the CmpMap class. It expands the compound Mapping into a list of
+atomic Mappings to be applied in series or parallel, and then for each
+Mapping in the list, invokes that Mapping’s protected “MapMerge”
+method. This method is supplied with the entire list of atomic
+Mappings, and determines if the nominated Mapping can be merged with
+any of its neighbours. If so, a new list of Mappings is returned
+containing the merged Mapping in place of the original mappings. Once
+all atomic Mappings in the CmpMap have been checked in this way, the
+same process is repeated again from the beginning in case any of the
+changes that have been made to the list allow further simplifications
+to be performed. This process is repeated until no further
+simplifications occur.
+
+\subsection{FrameSets}
+
+\subsubsection{Base and Current Frames}
+
+The “base” Frame represents the coordinate system in which axis values
+are initially generated or obtained. For instance a cursor application
+generates positions initially in graphics screen coordinates, and a
+centroiding application generates them in pixel coordinates.  The
+“current” Frame represents the coordinate system in which positions
+are required by subsequent user (code or human). This will often be
+some form of WCS, such as (RA,Dec), but could potentially be any of
+the Frames available in the FrameSet.
+
+\subsubsection{Integrity restoration}
+
+Changing a Frame to represent a different coordinate system should
+cause the Mappings that connect it to the other Frames in the FrameSet
+to be updated.
+
+\subsubsection{Using a FrameSet to calibrate a data cube or table}
+
+The base Frame represents grid coords, and the current Frame
+represents WCS coords.  Explain about the usefulness of PIXEL versus
+GRID coordinates.
+
+\subsection{Regions}
+
+These are the objects that contain actual axis values. They
+encapsulate a Frame and set of positions defined within the
+Frame. They can be transformed automatically into other Frames by
+either changing the properties of the Frame or by using a Mapping to
+map them into a new specified Frame.
+
+The simplest subclass of Region is the PointList that represents one
+or more positions within the Frame.  In practice, PointLists are
+rarely used. This is because a typical application is usually
+interested in positions that it has determined itself in some way, and
+so can process them directly using Mappings without the need to create
+an intermediate container object such as a PointList. Applications
+that for instance displays the world coordinates of the cursor, or the
+centroid position of an object, will usually obtain the axis values in
+some “base” system such as graphics screen coordinates or pixel
+coordinates, and will then transform them directly into the coordinate
+system of interest using a suitable Mapping that it has obtained
+previously. There is no need to first wrap the axis values in a
+PointList, transform the PointList to a new coordinate system, and
+then extract the coordinates from the transformed PointList. Doing so
+can potentially introduces large overheads that can increase the
+overall time taken to do the transformation.
+
+Other subclasses include, Circle, Box, Ellipse, etc. Compound Regions
+can be formed to represent the union or intersection of two
+Regions. The Prism class allows Regions to be extruded into other
+dimensions.
+
+Regions can behave as either Mappings or Frames. When Used as a
+Mapping, positions within the Region are left unchanged, and positions
+outside the Region are set to a “bad” value.
+
+Regions can contain a FrameSet in place of a Frame. In this case, the
+shape and extent of the Region are defined within the base Frame of
+the FrameSet, and the Region notionally represents a “view” of this
+shape transformed into the current Frame of the FrameSet. For
+instance, a “Box” could be created to represent the rectangular extent
+of an image in pixel coordinates. Such a Box will contain a Frame
+describing pixel coordinates, the pixel coordinates at the centre of
+the image, and the extent of each dimension of the image (in
+pixels). The Frame in this Box could be replaced by a FrameSet in
+which the base Frame is again pixel coordinates, but the current Frame
+is (RA,Dec). Internally, the Box still represents a rectangular area
+in pixel coordinates, but is now viewed externally as the
+corresponding curvilinear area in the (RA,Dec) Frame. When the Box is
+used as a Mapping, it will first transform each position from (RA,Dec)
+into pixel coordinates, and then test these transformed positions to
+see if they are within the rectangular area of pixel coordinates
+described by the Box.
+
+
+\section{Things we would do differently now}
+
+\begin{enumerate}
+
+\item Be clearer about the distinction between a coordinate system and
+  a domain. Coordinate systems are mathematical abstractions of
+  various types (Cartesian, polar, etc). You use a coordinate system
+  to describe a position within a physical space (domain). In this
+  sense a domain can encapsulate several alternative coordinate
+  systems, any of which can be used to describe positions in the
+  domain.
+
+\item Have a specific sub-class of Frame to describe a pixel array ( a
+  PixelFrame), allowing System=GRID or System=PIXEL.
+
+\item Use degrees instead of radians for sky axes.
+
+\item The restriction that Mappings can only transform doubles may be
+  a problem for time axes (but this is an issue with the
+  implementation rather than the model).
+
+\item Make it more modular. Some sort of facility for optional
+  extensions or plug-ins, so that the thing does not become such a
+  huge monolithic lump.
+
+\end{enumerate}
+
 \section{Acknowledgements}
 
 The Starlink software is currently maintained by the Joint Astronomy
