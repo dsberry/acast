@@ -165,7 +165,7 @@ WCS \sep data models \sep Starlink
 %% main text
 \section{Introduction}
 \label{sec:intro}
-The Starlink AST library \citep{SUN211} ...
+The Starlink AST library \citep[][\ascl{1404.016}]{SUN211} ...
 
 \section{Motivation}
 
@@ -177,8 +177,8 @@ astronomy is WCS, but coordinate systems are used in other places too
 (e.g. graphics).  AST includes facilities for importing and (where
 possible) exporting a wide variety of FITS-WCS headers, including
 various popular distortion schemes. AST was first released in 1997
-\cite[][included in ``Twenty Years of ADASS'']{1998ASPC..145...41W}.
-So 16 years of use within application code including Starlink, DS9 and
+\cite[][included in ``Twenty Years of ADASS'' \nocite{adass20}]{1998ASPC..145...41W}.
+So 16 years of use within application code including Starlink (\ascl{1110.012}), DS9 (\ascl{0003.002}) and
 XIMAGE. Interest in more flexible schemes for representing
 inter-related coordinate systems has increased recently (cf astropy
 and alternatives to FITS), so it is a good time to review the lessons
@@ -414,8 +414,8 @@ described by the Box.
 The AST library has been developed over a number of years
 \citep{1998ASPC..145...41W,2000ASPC..216..506W,2001ASPC..238..129B,2004ASPC..314..412B,2008ASPC..394..635B,2010ASPC..434..213B,2012ASPC..461..825B}
   and is written in C with no dependencies. It includes code from
-  WCSLIB \citep{2006ASPC..351..591C}, PAL \citep{2013ASPC..475..307J}
-  and SOFA \citep{2011SchpJ...611404H} but does not depend on those
+  WCSLIB \citep[][\ascl{1108.003}]{2006ASPC..351..591C}, PAL \citep{2013ASPC..475..307J}
+  and SOFA \citep[][\ascl{1403.026}]{2011SchpJ...611404H} but does not depend on those
   libraries. There are language bindings for Fortran, Java, Perl and
   Python.
 
@@ -423,7 +423,9 @@ The AST library has been developed over a number of years
 
 The Starlink software is currently maintained by the Joint Astronomy
 Centre, Hawaii with support from the UK Science and Technology
-Facilities Council.
+Facilities Council. The source code is open-source using the Lesser
+Gnu Public License and is available
+online\footnote{\url{https://github.com/Starlink/starlink}}.
 
 
 %% The Appendices part is started with the command \appendix;
