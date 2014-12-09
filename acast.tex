@@ -167,7 +167,316 @@ WCS \sep data models \sep Starlink
 \label{sec:intro}
 The Starlink AST library \citep[][\ascl{1404.016}]{SUN211} ...
 
-\section{Motivation}
+\section{Historical Perspective}
+
+\subsection{Initial Problems}
+
+The first release of the AST library was in 1998
+\citep{1998StarB..20....7D,1998ASPC..145...41W} but some of the
+underlying concepts date from the late 1980s, when the Starlink
+Project was designing its NDF data format for gridded astronomical
+data \citep{2015Jenness}. There was clearly a need to relate positions
+within gridded data, using coordinates based on pixel indices, to
+real-world positions on the sky, wavelengths in a spectrum and so
+on. These non-pixel coordinate systems are now generally known as
+world coordinate systems (WCS).
+
+Calibration of spectra, for example, was commonly performed by fitting
+a polynomial to express wavelength as a function of pixel position and
+then either storing the polynomial coefficients, or tabulating the
+polynomial value at each pixel centre. While not completely general,
+the latter option was an acceptable solution and was adopted as part
+of the Starlink data format. An array giving the central wavelength at
+each pixel was stored as the \texttt{AXIS} component in the NDF data
+structure and did good service in spectroscopic applications. It was
+also possible, in a simple minded way, to attach an \texttt{AXIS}
+array to each dimension of an image or any gridded dataset of higher
+dimensionality. This allowed each of its axes to be calibrated in
+terms of world coordinates.
+
+This approach was adequate if the axes represented independent
+quantities (like wavelength and position for a long-slit spectrum),
+but did not suffice if the axes were inter-independent. Unfortunately,
+in the common case of celestial coordinates (such as Right Ascension
+and Declination), the axes are almost always inter-dependent. This is
+because the sky is essentially spherical and its coordinates are
+therefore naturally curvilinear when projected into two
+dimensions. This inter-dependence is a common feature of world
+cordinate systems in practice, so a solution was clearly needed that
+addressed it properly.
+
+The Flexible Image Transport System
+\citep[FITS;][]{1981A&AS...44..363W,1995ASPC...77..233G}, at that
+time, addressed the issue in a better but still rudimentary way. In
+essence, it stored a physical pixel size (e.g., in seconds of arc),
+allowed for a linear scaling of an image (typically to allow for the
+position angle rotation of the telescope) and then projected it on to
+the celestial sphere using one of a defined set of map
+projections. This representation was clearly based on a model of a
+physical telescope and how it imaged an observed region of the sky in
+its focal plane.
+
+While successfully accommodating the curvilinear nature of sky
+coordinates, this FITS approach was still limited in many ways. In
+essence, it defined a small set of functional forms (based on map
+projections) through which pixel coordinates could be mapped on to
+celestial coordinates and back again. However, if the actual
+relationship between pixel coordinates and world coordinates didn't
+correspond to one of these functional forms, then it wasn't possible
+to use FITS to store the coordinate information.
+
+For instance, if astronomical instrumentation were to use a novel map
+projection, if arbitrary instrumental distortions were present or if
+the data were re-gridded into a non-physical space, then the FITS
+approach would fail. It also had limited support for high-accuracy
+astrometry, where the departure of the sky from a perfect sphere, for
+a variety of reasons, has to be taken into account. In addition, there
+are many other non-celestial world coordinate systems that one might
+use (involving energy, velocity, time, frequency, etc.) that no
+contemporary system could represent adequately.
+
+Unfortunately, this list of limitations only scratches the surface of
+the problem as it was perceived at the time. Other considerations,
+such as the time-dependent relationship between non-inertial celestial
+coordinate systems, the dependence of apparent positions on the
+position and velocity of the observer (and also on the wavelength of
+observation and atmospheric conditions) and periodic revisions to the
+fundamental definitions of celestial coordinate and time systems would
+all have to be accommodated, as would numerous other issues specific
+to particular domains (celestial coordinates, time systems, radial
+velocities, wavelength/energy, etc.).
+
+
+\subsection{TRANSFORM}
+
+In the late 1980s, no immediate and general solution to these problems
+could be seen. Recognising the limitations in the FITS approach,
+however, the Starlink Project decided to take a hard line and to omit
+completely any component dedicated to world coordinate systems from
+its new NDF data format. Instead, this \emph{astrometry extension}
+(from which the name AST is derived) was to be added at a later date
+when a suitable solution had been formulated.
+
+This decision was undoubtedly strongly influenced by Patrick Wallace's
+presence in the Project and the major work he had done on the SLALIB
+library \citep[][\ascl{1403.025}]{1994ASPC...61..481W} to encapsulate best-practice in
+astrometric calculations (and also in other domains such as time
+systems). Discussion within the Project rapidly convinced us that if
+we adopted the FITS approach as it existed at the time, we would cut
+ourselves off from the proper rigorous treatment of astrometric data
+that is needed for the highest accuracy.
+
+Consequently, a pilot project was conducted to explore alternative
+approaches. The most important limitation of the FITS approach was felt
+to be the use of a fixed set of functional forms (map projections) each
+of which was associated with a small fixed set of parameters. This
+simplified storing the information in 80-character FITS \emph{header cards},
+but clearly the set of functional forms that might ultimately be needed
+was much larger than had been recognised. Adding new ones might become a
+never-ending project and that, in turn, raised the prospect of
+continually upgrading all software that had to read and process FITS
+headers and handle coordinate systems.
+
+The alternative approach that we explored was to write an expression
+parser that would accept sets of arithmetic expressions similar to those
+used in Fortran and C, along with the usual set of mathematical
+functions. Together with a method of passing named parameter values into
+these expressions, this greatly increased the set of functional forms
+that could be represented. The expressions themselves (encoded as
+character strings) and the associated parameter values could easily be
+stored in astronomical datasets. Typically, one set of expressions would
+relate pixel coordinates to world cordinates (e.g. sky coordinates) and
+a second, optional, set would define the inverse transformation. The
+expression syntax was powerful enough to represent a wide range of map
+projections plus many other transformations into alternative world
+coordinate systems.
+
+A processing engine was also provided that could use the stored
+expression data to transform actual coordinate values.
+
+A library implementing this, called \textsc{transform}, was released
+in 1989 \citep{SUN61,1989StarB...4....7L}. It stored its data (the
+expressions and parameters) in Starlink's Hierarchical Data Format
+\citep[HDS;][]{SUN92,SSN27} and was thus able to integrate with the
+Starlink NDF data format to attach arbitrary world corrdinates to
+gridded astronomical datasets.
+
+
+\subsection{TRANSFORM Lessons}
+
+Ultimately, \textsc{transform} turned out not to be a full solution to
+the WCS problem and did not become part of the NDF data
+format\footnote{Although it it was the precursor of the
+  \texttt{MathMap} class in AST.}. It was, however, used for two
+initially unforeseen purposes which turned out to be very significant:
+
+\begin{enumerate}
+\item Associating coordinate systems with plotting surfaces in a
+  ``graphics database'' \citep[see e.g.,][]{SUN48}. This allowed
+  plotting applications to store a coordinate system for (say) a graph
+  plotted in logarithmic coordinates so that those coordinates could
+  later be recovered from the position of a cursor. This demonstrated
+  that plotting was a major application area for this type of
+  technology, especially when using curvilinear coordinates such as
+  Right Ascension and Declination which are notoriously difficult to
+  handle properly with standard plotting software.
+
+\item Transformation and combination of bulk image data using general
+  arithmetic expressions (as an alternative to combining images using
+  a manual sequence of add/subtract/multiply/divide and similar
+  applications). This showed that (a) the approach could easily be
+  efficient enough to handle large datasets and (b) the data values in
+  an image were just another coordinate that could be transformed into
+  different representations (logarithmic, different units, etc.) in
+  much the same way as its axes.
+\end{enumerate}
+
+With these insights, it was clear that the ideas behind
+\textsc{transform} had potential, but some serious deficiencies had
+also emerged:
+
+\begin{itemize}
+
+\item Arithmetic expressions, while fairly general, could not easily
+  cope with coordinate transformations that required iterative
+  solution, nor with discontinuous transformations, nor with look-up
+  tables or a variety of other computational techniques. While
+  arithmetic expressions provided a valuable increase in the
+  flexibility of coordinate transformations, clearly other classes
+  were still needed.
+
+\item It was a major problem for the average writer of astronomical
+  software to formulate the required coordinate expressions correctly
+  even when dealing with quite simple sky coordinate systems. The core
+  of this issue is that celestial coordinate systems are rather
+  complex and a good deal of specialist knowledge is needed to
+  formulate even simple cases correctly. Clearly a better solution
+  would be to encapsulate this knowledge in the WCS software and
+  provide a simpler API that dealt only in high-level concepts.
+
+\item For high accuracy work, further complex calculations
+  arise. These are related, for example, to atmospheric refraction and
+  special \& general relativistic effects (like the observer's motion
+  and the sun's gravity).  These require the use of a dedicated
+  library of astrometric functions and cannot in practice be handled
+  by simple expressions. They also require additional data about the
+  observing context (time, position, velocity, wavelength, etc.) and
+  any practical solution must define how these are stored and
+  processed.
+
+\item \textsc{transform} had no ability to store additional
+  information about data axes, such as labels and units.
+
+\item It became clear that coordinate transformations frequently
+  needed to be combined, for example by applying one transformation
+  after another, and that this process was often inefficient. The key
+  to better efficiency lay in knowing more about each transformation,
+  like whether it was linear or had a variety of other
+  properties. With this information it was possible to merge (or
+  cancel out) consecutive transformations for better
+  efficiency. \textsc{transform} had a rudimentary system for encoding
+  this information, but it was not really up to the task.
+
+\item Tying WCS software to a particular (Starlink) data system was a
+  mistake and limited the uses to which it could be put. It would
+  clearly be better if the data could be encoded (serialised) in
+  alternative ways to make it data-system agnostic. The same
+  agnosticism should also apply to other likely dependencies, like
+  graphics systems and error reporting.  The ability to implement
+  these services in alternative ways would be especially important
+  when designing graphical user interfaces that processed WCS
+  information.
+
+\end{itemize}
+
+\subsection{AST Principles}
+
+It was with this knowledge that we approached the design of the AST
+library in {\color{red} 199?}. One of the first decisions was to
+separate the representation of a coordinate system (that we called a
+Frame) from the computational recipe that transforms between
+coordinate systems (a Mapping). From the \textsc{transform} experience
+we knew we would need multiple classes of both these data types, all
+of which would need to support the same basic operations, but each
+having its own specialisation. The correspondence with sub-classing in
+object-oriented (OO) programming was irresistible and the decision to
+use an OO design immediately followed.
+
+This raised the issue of an implementation language. We planned to use
+the SLALIB library for astrometric calculations. This had been
+developed with extreme portability in mind and had recently been
+re-written in ANSI C. We didn't want to compromise this portability,
+so decided also to work in strict ANSI C and to minimise software
+dependencies as much as possible. This meant providing portable
+interfaces to facilities that were intrinsically less portable, such
+as data file access, plotting, error reporting, etc. and providing
+simple implementations that users could re-write if necessary.
+
+Deciding to write an OO system in a non-OO language took considerable
+thought. We needed to provide a Fortran-callable interface but, at the
+time, the portability of C++ code was quite limited if one needed to
+call it from Fortran, so that route was unattractive. Eventually, we
+were guided by the approach described by \citet{1992Holub} for
+handling objects in C and were able to hide the detail from users
+using pre-processor macros.
+
+One consequence of this is that users cannot easily create new
+sub-classes from AST objects without learning the internal conventions
+that it uses. This can, however, be seen as something of an advantage.
+The library is intended for data interchange and creating new
+sub-classes would inevitably allow persistent objects to be created
+that other users could not access\footnote{For Mappings, where this
+  issue is most relevant, the problem has been mitigated in a
+  controlled way by the IntraMap class that allows separately-compiled
+  code to be imported into the library.}.
+
+As noted previously, we wanted the AST API to deal in high-level
+concepts and to hide as much specialist detail as possible from the
+user. This principle arose from considering the complex calculations
+involved in handling celestial coordinates and time systems. However,
+we soon realised that two other areas were similarly complex and could
+benefit from the same approach.
+
+The first area was graphics. Plotting in curvilinear coordinates is a
+complicated business if one wants to handle all the corner cases
+correctly. Plotting and labelling celestial coordinate axes, for
+example, presents many problems; especially near the poles of an all-sky
+projection. It is made even harder if the projection contains
+discontinuities. But the high-level concepts involved in such plotting
+(coordinate systems and the mappings between them) are such a natural
+fit with other AST concepts that it seemed obvious to implement a class
+of coordinate system that is specialised for graphics. The high-level
+operations it supports would then hide the details of the complex and
+generalised plotting algorithms involved.
+
+The second area is an aspect of data storage -- namely the handling of
+FITS header cards. While the AST library could provide ways to
+transparently serialise its own data, possibly in multiple ways, it
+also needed to inter-operate with FITS. WCS data in FITS data files is
+stored in a series of 80-character header cards and, over the years,
+the number of different ways the information can be stored in these
+headers has grown. The complexity involved is now considerable
+\citep[see e.g.,][]{2015Thomas}. Again, detailed specialist knowledge
+is needed to extract this information reliably and to write it back
+(possibly modified) in a form that gives other FITS-handling software
+a chance of using it while not conflicting with the many other FITS
+headers typically present.
+
+For a user of the AST library, we wanted this process of accessing FITS
+headers to appear as much like a simple read/write operation as
+possible, with all the implementation details hidden. This requirement
+arose from more than simply ease-of-use. FITS header conventions (many
+of them informal) are in constant flux and if these details are embedded
+in applications programs, those programs must constantly receive
+attention if they are to remain up to date. Embedding all these details
+in the AST library allows the problem to be addressed in one place and
+by someone with the necessary expertise.
+
+FITS header handling has proved the most complex area to tame in AST.
+But introducing the concept of a \emph{destructive read} (which reads WCS
+data from FITS headers and simultaneously deletes the relevant headers)
+has made it possible to write applications with very little code that
+have completely general handling of FITS WCS headers.
 
 \section{What is AST?}
 
