@@ -165,7 +165,40 @@ WCS \sep data models \sep Starlink
 %% main text
 \section{Introduction}
 \label{sec:intro}
-The Starlink AST library \citep[][\ascl{1404.016}]{SUN211} ...
+
+The Starlink AST library \citep[][\ascl{1404.016}]{SUN211} provides a
+generalised scheme for modelling, manipulating and storing inter-related
+coordinate systems. Whilst written in C, it has bindings for several
+other languages including Python, Java, Perl and Fortran. It has
+specialised support for many of the coordinate systems and projections
+commonly used to describe astronomical World Coordinate Systems (WCS),
+including all those described by the FITS-WCS standard, plus various
+popular distortion schemes currently in use. However, it is not limited
+to WCS, and may be used in any situation requiring transformation between
+different coordinate systems.
+
+Unlike FITS-WCS, which supports only a relatively small set of prescribed
+transformation recipes reflecting the coordinate transformations within
+an optical telescope, AST allows arbitrarily complex transformations to be
+constructed by combining simple atomic transformations in series or in
+parallel. This allows a much wider range of transformations to be
+described than is possible using FITS-WCS, and so can accomodate a wider
+range of data storage forms without the need to re-grid the data.
+
+AST was first released in 1997 \cite[][included in ``Twenty Years of
+ADASS'' \nocite{adass20}]{1998ASPC..145...41W}. Since then it has been in
+continuous use within the Starlink Software Collection (\ascl{1110.012})
+and is also used by various other major astronimcal software tools such as
+DS9 (\ascl{0003.002}). Interest in flexible schemes for representing
+inter-related coordinate systems has increased recently\footnote{For
+instance, in the discussions about possible succesors to the FITS format,
+and within the Astropy project}, and so it seems an appropriate time to
+review the lessons learned from AST.
+
+This paper first presents an account of the historical issues that drove
+the initial development of AST, together with the reasoning behind some
+of the design decisions, and then presents an over-view of the more
+important aspects of the data model used by AST.
 
 \section{Historical Perspective}
 
@@ -223,7 +256,8 @@ projections) through which pixel coordinates could be mapped on to
 celestial coordinates and back again. However, if the actual
 relationship between pixel coordinates and world coordinates didn't
 correspond to one of these functional forms, then it wasn't possible
-to use FITS to store the coordinate information.
+to use FITS to store the coordinate information\footnote{Unless the data was
+first re-gridded into a form supported by FITS.}.
 
 For instance, if astronomical instrumentation were to use a novel map
 projection, if arbitrary instrumental distortions were present or if
@@ -244,8 +278,9 @@ observation and atmospheric conditions) and periodic revisions to the
 fundamental definitions of celestial coordinate and time systems would
 all have to be accommodated, as would numerous other issues specific
 to particular domains (celestial coordinates, time systems, radial
-velocities, wavelength/energy, etc.).
-
+velocities, wavelength/energy, etc.). This was several years before the 
+FITS community commenced work on what was eventually to become the current 
+FITS-WCS standard.
 
 \subsection{TRANSFORM}
 
@@ -389,10 +424,32 @@ also emerged:
 
 \end{itemize}
 
+\subsection{Developments in FITS WCS}
+
+At about the same time, the wider FITS community also came to recognise
+some of the limitations of WCS handling within FITS, and in 1992 work commenced 
+on a new standard for storing WCS information within FITS files. However, 
+in view of the ``once FITS, always FITS'' principle, that work consisted 
+mainly in formalising and extending existing practices. So for instance, new 
+keywords were defined to store the extra meta-data needed for a complete
+description of a celestial coordinates system, and new projection types were 
+added, but the basic model remained unchanged. The new standard still required 
+that the transformation be split into three components applied in series; an 
+affine transformation that converts pixel coordinates into \emph{intermediate 
+world coordinates}, a spherical projection that converts these into \emph{native 
+spherical coordinates}, and a spherical rotation that converts these into the
+final world coordinate system.
+
+In view of the decision to stay with this rigid and restrictive model,
+and in view of expected length of time needed to agree a new standard\footnote{An
+expectation that was justified when the stadard was finally published in 2002.},
+the Starlink project decided in early 1996 to develope its own WCS system, informed 
+by the earlier experiments with \textsc{transform}, rather than adopt the new FITS 
+standard.
+
 \subsection{AST Principles}
 
-It was with this knowledge that we approached the design of the AST
-library in early 1996. One of the first decisions was to
+One of the first decisions was to
 separate the representation of a coordinate system (that we called a
 Frame) from the computational recipe that transforms between
 coordinate systems (a Mapping). From the \textsc{transform} experience
@@ -403,7 +460,8 @@ object-oriented (OO) programming was irresistible and the decision to
 use an OO design immediately followed.
 
 This raised the issue of an implementation language. We planned to use
-the SLALIB library for astrometric calculations. This had been
+the SLALIB library for astrometric calculations\footnote{A later version 
+of AST eventually replaced SLALIB with SOFA and PAL.}. This had been
 developed with extreme portability in mind and had recently been
 re-written in ANSI C. We didn't want to compromise this portability,
 so decided also to work in strict ANSI C and to minimise software
@@ -422,10 +480,12 @@ using pre-processor macros.
 
 One consequence of this is that users cannot easily create new
 sub-classes from AST objects without learning the internal conventions
-that it uses. This can, however, be seen as something of an advantage.
+that it uses. At the time, this was seen as something of an advantage.
 The library is intended for data interchange and creating new
 sub-classes would inevitably allow persistent objects to be created
-that other users could not access\footnote{For Mappings, where this
+that other users could not access. However, with hind-sight a more open
+architecture may have encouraged involvement from a wider user-base.
+\footnote{For Mappings, where this
   issue is most relevant, the problem has been mitigated in a
   controlled way by the IntraMap class that allows separately-compiled
   code to be imported into the library.}.
@@ -451,7 +511,7 @@ generalised plotting algorithms involved.
 
 The second area is an aspect of data storage -- namely the handling of
 FITS header cards. While the AST library could provide ways to
-transparently serialise its own data, possibly in multiple ways, it
+serialise its own data transparently, possibly in multiple ways, it
 also needed to inter-operate with FITS. WCS data in FITS data files is
 stored in a series of 80-character header cards and, over the years,
 the number of different ways the information can be stored in these
@@ -472,37 +532,20 @@ attention if they are to remain up to date. Embedding all these details
 in the AST library allows the problem to be addressed in one place and
 by someone with the necessary expertise.
 
-FITS header handling has proved the most complex area to tame in AST.
+FITS header handling has proved one of the most complex area to tame in AST.
 But introducing the concept of a \emph{destructive read} (which reads WCS
 data from FITS headers and simultaneously deletes the relevant headers)
 has made it possible to write applications with very little code that
 have completely general handling of FITS WCS headers.
 
-\section{What is AST?}
 
-AST is a library that provides a generalised scheme for modelling and
-manipulating inter-related coordinate systems. Obvious use in
-astronomy is WCS, but coordinate systems are used in other places too
-(e.g. graphics).  AST includes facilities for importing and (where
-possible) exporting a wide variety of FITS-WCS headers, including
-various popular distortion schemes. AST was first released in 1997
-\cite[][included in ``Twenty Years of ADASS'' \nocite{adass20}]{1998ASPC..145...41W}.
-So 16 years of use within application code including Starlink (\ascl{1110.012}), DS9 (\ascl{0003.002}) and
-XIMAGE. Interest in more flexible schemes for representing
-inter-related coordinate systems has increased recently (cf astropy
-and alternatives to FITS), so it is a good time to review the lessons
-learned from AST.
-
-Flexible handling of coordinate systems is important for describing
-raw data (distortions etc), but is also very important for allowing
-creative use of coordinate transformations during data analysis. Also
-important for handling of slices, and dimensionality changes.
-
-\section{Key Classes within AST}
+\section{The AST Data Model}
 
 \subsection{Key principles}
 
-Distinguish clearly between the purposes of Mappings and Frames.
+The basis of the AST data model is the distinction between a
+\emph{transformation} and a \emph{coordinate system}.
+
 
 Think in terms of Frames rather than axes. FITS-WCS tries to maintain
 some sort of 1-to-1 correspondence between pixel axes and WCS axes,
