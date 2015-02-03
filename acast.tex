@@ -855,7 +855,8 @@ class should probably have been named \emph{Domain} rather than
 \emph{Frame}.}. For instance, the \emph{SkyFrame} class describes positions
 on the sky using a range of popular celestial coordinate systems. It extends
 the Frame class by adding various items of meta-data necessary to
-determine how to convert between celestial coordinate systems, the main
+determine the conversion between any pair of supported celestial coordinate
+systems, the main
 items being the epoch of observation, and the reference
 equinox\footnote{The base Frame class includes the observer's geodetic
 position.}. Thus given two SkyFrames describing, say, FK5 (RA,Dec) and
@@ -879,13 +880,65 @@ create Mappings between any pair of supported spectral coordinate system,
 including rest frequency, standard of rest, celestial reference position,
 etc.
 
-Basic Frame properties and methods:
+This principle, that each class of Frame contains all the meta-data and
+intelligence required to create a Mapping between any two coordinate
+systems within the Frame's domain, extends to compound Frames as well
+atomic Frames, as described in the next section. The domain associated
+with a specific Frame is stored as a simple string such as "SKY",
+"SPECTRUM", "TIME", etc.
 
-\begin{itemize}
-\item Sky, Time and Spec Frames
-\item Compound Frames
-\item Converting between Frames
-\end{itemize}
+The base Frame class itself is slightly unusual in that it can be used to
+describe any generic domain, and is restricted to a single Cartesian
+coordinate system withi that domain. The domain associated with a basic
+Frame is specified by the caller and can be any arbitrary string. Clearly,
+this restricts the usefulness of a basic Frame (compared to other more
+specialised classes of Frames) in that it is not possible to include any
+knowledge about multiple coordinate systems given the arbitrary nature of
+the domain. The only exception to this is that the basic Frame class
+knows how to convert between different dimensionally equivalent units.
+Thus the implementation of the Convert method provided by the basic Frame
+class can generate a Mapping between two basic Frames if they have the
+same domain name, the same number of axes, and the axes have different
+but dimesionally equivalent units.
+
+\subsubsection{Classes of Frame Provided by AST}
+AST provides several classes of Frame that describe different specialised
+domains. As with Mappings, these canbe divided into \emph{atomic} Frames that
+describe  single specific domain, and \emph{compound} Frames that combine
+together other Frames (atomic or compound) to create a Frame describing a
+domain of higher dimensionality.
+
+The atomic Frame classes are:
+
+\begin{description}
+\item[Frame:] An arbitrary N-dimensional domain with a single Cartesian
+coordinate system.
+\item[FluxFrame:] A 1-dimensional domain describing several forms of flux
+measurement systems (all measured at a single spectral position).
+\item[SkyFrame:] A 2-dimensional domain describing several celestial
+coordinate systems.
+\item[SpecFrame:] A 1-dimensional domain describing several spectral
+coordinate systems.
+\item[DSBSpecFrame:] Extends the \emph{SpecFrame} class to describe dual
+sideband spectral coordinate systems.
+\item[TimeFrame:] A 1-dimensional domain describing several time coordinate
+systems.
+\end{description}
+
+The following compound Frame classes are provided:
+
+\begin{description}
+\item[CmpFrame:] Combines the axes from any two other Frames.
+\item[SpecFluxFrame :] Combines a FluxFrame with a SpecFrame.
+\end{description}
+
+
+
+
+\subsubsection{Compound Frames}
+Converting between compound Frames, potentially with different numbers of
+axes (e.g. converting between a (RA,Dec) Frame, and a (wavelength,l,b)
+CmpFrame).
 
 \subsection{FrameSets}
 
