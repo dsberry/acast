@@ -540,6 +540,7 @@ have completely general handling of FITS WCS headers.
 
 
 \section{The AST Data Model}
+\label{sec:model}
 
 The most basic principle behind the AST data model is a clear distinction
 between a \emph{transformation} and a \emph{coordinate system}.
@@ -630,6 +631,9 @@ and the transformations between them. }
 \label{fig:complex-frameset}
 \end{figure}
 
+A selection of the more significant methods and properties of these
+three classes are described in appendix~\ref{app:classes}.
+
 \subsection{Transformations and Mappings}
 Within AST, most \emph{Mappings} encapsulates two transformations - one is
 designated as the \emph{forward} transformation and the other as the
@@ -652,58 +656,6 @@ transformations are defined. For instance, the \emph{MatrixMap} class, which
 multiplies each input vector by a specified matrix to create the output
 vector, will only have an inverse transformation if the matrix is square
 and invertable.
-
-
-\subsubsection{Methods and Properties of the Mapping Class}
-The most important public methods of the base Mapping class are:
-
-\begin{description}
-
-\item[astInvert:] Invert a Mapping (i.e. swap the input and output spaces).
-
-\item[astLinearApprox:] Create a new Mapping which is a linear approximation
-to the supplied Mapping.
-
-\item[astMapSplit:] Create (if possible) a new Mapping that represents a
-subspace within the output space of the supplied Mapping. For instance,
-given a Mapping from 3-dimensional pixel coordinates to
-(RA,Dec,wavelength), create a Mapping between 2-dimensional pixel
-coordinates and (RA,Dec). This is only possible if the requested subspace
-is independent of the other output axes.
-
-\item[astRate:] Calculate the rate of change of a specified axis within the
-output space, with respect to a specified axis within the input space, at
-a given position within the input space.
-
-\item[astRebin:]: Re-bin the pixel values within an input data array to create
-an output data array, using the forward transformation of the supplied Mapping
-to define the position within the output array at which each input pixel value
-is placed.
-
-\item[astResample:]: Re-sample the pixel values within an input data array to
-create an output data array, using the inverse transformation of the supplied
-Mapping to define the position within the input array from which each
-output pixel value is copied. A range of different interpolation schemes
-are provided.
-
-\item[astSimplify:] Simplify a compound Mapping (see
-section~\ref{sec:simplification}).
-
-\item[astTran:] Transform coordinates using the supplied Mapping.
-
-\end{description}
-
-The most important public properties of the base Mapping class are:
-\begin{description}
-
-\item[IsLinear:] A boolean flag indicating if the Mapping is linear.
-\item[Nin:] The number of axes within the input space of the Mapping.
-\item[Nout:] The number of axes within the output space of the Mapping.
-\item[TranForward:] A boolean flag indicating if the Mapping has a defined
-forward transformation.
-\item[TranInverse:] A boolean flag indicating if the Mapping has a defined
-inverse transformation.
-\end{description}
 
 \subsubsection{Classes of Mapping Provided by AST}
 AST provides many classes of Mapping that implement a wide range of
@@ -882,23 +834,50 @@ astSimplify method takes care to spot such loops and to assign priority
 to one or the other of the conflicting Mappings.
 
 \subsection{Frames and Domains}
-
-
+As described in section~\ref{sec:model}, each instance of the Frame class
+contains all the meta-data necessary to give a complete description of
+a particular coordinate system. Each Frame is associated with a specific
+\emph{domain} as explained in the next section.
 
 \subsubsection{What is a Domain?}
+AST uses the word \emph{domain} to refer to a physical (or abstract)
+space such as ``time'', ``the sky'', ``the electro-magnetic spectrum'',
+``the focal plane'', ``a pixel array''. Points within such a space can in
+general be described using any one of several coordinate systems. For
+instance, any position on the sky can be described using ICRS
+coordinates, Galactic coordinates, \emph{etc}. Similarly, positions in
+the eletro-magnetic spectrum can be described using frequency,
+wavelength, velocity, \emph{etc}). Each subclass of Frame represents a
+specific domain, and in general will encapsulate all the metadata needed
+to create a Mapping between any pair of supported coordinate systems
+within its domain\footnote{In retrospect, the Frame
+class should probably have been named \emph{Domain} rather than
+\emph{Frame}.}. For instance, the \emph{SkyFrame} class describes positions
+on the sky using a range of popular celestial coordinate systems. It extends
+the Frame class by adding various items of meta-data necessary to
+determine how to convert between celestial coordinate systems, the main
+items being the epoch of observation, and the reference
+equinox\footnote{The base Frame class includes the observer's geodetic
+position.}. Thus given two SkyFrames describing, say, FK5 (RA,Dec) and
+Galactic (l,b), it is possible to create a Mapping between them based on
+the mata-data stored within the two SkyFrames. This Mapping can then be
+used to convert (RA,Dec) positions into equivalent (l,b) positions, or
+vice-versa. The process of creating this Mapping is implemented within
+the \emph{Convert} method of the base Frame class. For instance, in
+Python:
 
-A physical space such as ``time'', ``the sky'', ``the EM spectrum'', ``the
-focal plane'', ``a pixel array''. Points within such a space can in
-general be described using any one of several coordinate systems
-(e.g. the sky can be described using ICRS, Galactic, \emph{etc}, the EM
-spectrum can be described using freq, wavelength, \emph{etc}). The ``Frame''
-class represents a domain, and should encapsulate all the metadata
-needed to transform a position between any pair of coordinate systems
-that can be used to describe positions within its domain (in
-retrospect, we should have named the class ``Domain'' rather than
-``Frame''). Thus things like ``pixel size'' should \emph{not} be stored in a
-Frame (Arnold), since it is a property of the relationship between two
-Frames (a.k.a the Mapping) rather than of the Frame itself.
+\begin{verbatim}
+   my_frameset = frame1.convert( frame2 )
+\end{verbatim}
+
+will, if possible, generate a Mapping from \verb{frame1} to
+\verb{frame2}. The return Mapping is encapsulated within a FrameSet that
+also includes copies of \verb{frame1} and \verb{frame2}.
+
+Likewise, the SpecFrame class encapsulates all the meta-data needed to
+create Mappings between any pair of supported spectral coordinate system,
+including rest frequency, standard of rest, celestial reference position,
+etc.
 
 Basic Frame properties and methods:
 
@@ -1039,10 +1018,66 @@ online\footnote{\url{https://github.com/Starlink/starlink}}.
 
 %% The Appendices part is started with the command \appendix;
 %% appendix sections are then done as normal sections
-%% \appendix
+\appendix
 
-%% \section{}
-%% \label{}
+\section{Methods and Properties}
+\label{app:classes}
+
+This appendix includes brief descriptions of the more significant methods
+and properties of the three main classes used by AST - Mapping, Frame and
+FrameSet.
+
+\subsection{The Mapping Class}
+The most important public methods of the base Mapping class are:
+
+\begin{description}
+
+\item[astInvert:] Invert a Mapping (i.e. swap the input and output spaces).
+
+\item[astLinearApprox:] Create a new Mapping which is a linear approximation
+to the supplied Mapping.
+
+\item[astMapSplit:] Create (if possible) a new Mapping that represents a
+subspace within the output space of the supplied Mapping. For instance,
+given a Mapping from 3-dimensional pixel coordinates to
+(RA,Dec,wavelength), create a Mapping between 2-dimensional pixel
+coordinates and (RA,Dec). This is only possible if the requested subspace
+is independent of the other output axes.
+
+\item[astRate:] Calculate the rate of change of a specified axis within the
+output space, with respect to a specified axis within the input space, at
+a given position within the input space.
+
+\item[astRebin:]: Re-bin the pixel values within an input data array to create
+an output data array, using the forward transformation of the supplied Mapping
+to define the position within the output array at which each input pixel value
+is placed.
+
+\item[astResample:]: Re-sample the pixel values within an input data array to
+create an output data array, using the inverse transformation of the supplied
+Mapping to define the position within the input array from which each
+output pixel value is copied. A range of different interpolation schemes
+are provided.
+
+\item[astSimplify:] Simplify a compound Mapping (see
+section~\ref{sec:simplification}).
+
+\item[astTran:] Transform coordinates using the supplied Mapping.
+
+\end{description}
+
+The most important public properties of the base Mapping class are:
+\begin{description}
+
+\item[IsLinear:] A boolean flag indicating if the Mapping is linear.
+\item[Nin:] The number of axes within the input space of the Mapping.
+\item[Nout:] The number of axes within the output space of the Mapping.
+\item[TranForward:] A boolean flag indicating if the Mapping has a defined
+forward transformation.
+\item[TranInverse:] A boolean flag indicating if the Mapping has a defined
+inverse transformation.
+\end{description}
+
 
 %% References
 %%
