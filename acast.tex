@@ -977,26 +977,65 @@ coordinate axes.
 
 The \emph{FrameSet} class represents a network of inter-related
 coordinate systems in the form of a tree-structure in which each node
-is a Frame, with the nodes being connected together by Mappings. It is
+is a Frame, with the nodes being connected together by Mappings (see
+Fig.~\ref{fig:complex-frameset}). It is
 usual (although not required) for each Frame in a FrameSet to describe a
 different domain. A single FrameSet can be used, for instance, to provide
-a complete description of the WCS associated with a data set. In this
+a complete description of the WCS associated with a data array. In this
 case, one of the Frames represents pixel coordinates, and the other
 Frames represent a collection of alternative world coordinate systems.
 For instance, a FrameSet describing an image taken by a telescope may
 have three Frames describing pixel coordinates, focal plane coordinates
 and sky coordinates.
 
-\subsubsection{Base and Current Frames}
+The FrameSet class provides a method, \emph{GetMapping}, to return the
+Mapping between any two nominated Frames. This may involve concatenating
+several Mappings if the two Frames are not directly connected to each
+other. For instance, if asked to returned the Mapping between Frame 1 and
+Frame 4 in Fig.~\ref{fig:complex-frameset}, the \emph{GetMapping} method
+will retrieve Mappings 1 and 3 from the FrameSet, and combine them in
+series into a single \emph{CmpMap} (compound Mapping).
 
-The ``base'' Frame represents the coordinate system in which axis values
-are initially generated or obtained. For instance a cursor application
-generates positions initially in graphics screen coordinates, and a
-centroiding application generates them in pixel coordinates.  The
-``current'' Frame represents the coordinate system in which positions
-are required by subsequent user (code or human). This will often be
-some form of WCS, such as (RA,Dec), but could potentially be any of
-the Frames available in the FrameSet.
+The FrameSet class also provides a method, \emph{GetFrame}, to
+return any nominated Frame from a FrameSet.
+
+\subsubsection{Base and Current Frames}
+Two of the most common operations provided by systems such as AST are 1)
+converting positions from one Frame to another, and 2) enquiring or using
+the properties of a Frame. Performing these two operations repeatedly
+would become tedious if each such operation involed separate calls to
+\emph{GetMapping} or \emph{GetFrame} to extract the required Mapping or
+Frame from the FrameSet. To avoid this, AST is implemented in such a way
+that the FrameSet class effectively inherits from both the Mapping class
+and the Frame class. This means that any Mapping method, or any Frame
+method, can also be used on a FrameSet.
+
+The FrameSet class allows two nominated Frames to be flagged within each
+FrameSet. One is referred to as the ``current Frame'', and the other as
+the ``base Frame''\footnote{The FrameSet class provides methods to set
+and retrieve the index of these two Frames.}. When used as a Frame, a
+FrameSet is equivalent of its current Frame. When used as a Mapping, a
+FrameSet is equivalent to the Mapping from its base Frame to its current
+Frame.
+
+In practice, the coordinate system in which axis values are initially
+generated or obtained is usually used as the base Frame. For instance a
+cursor application generates positions initially in graphics screen
+coordinates, and a centroiding application generates them in pixel
+coordinates.  The coordinate system in which positions are required by
+subsequent user (code or human) is usually used as the current Frame. This
+will often be some form of WCS, such as (RA,Dec), but could potentially
+be any of the Frames available in the FrameSet.
+
+When AST creates a FrameSet from the WCS information in a FITS file, the
+base Frame represents pixel coordinates, and the the current Frame
+represents the primary WCS. The FrameSet may also contain other Frames
+representing any alternate axis descriptions stored in the FITS-WCS.
+This means that the FrameSet can be used as a Mapping from pixel
+coordinates to primary WCS, and can also be used as a Frame to determine
+the properties of the primary WCS.
+
+The caller is free to change the base and/or current Frames at any time.
 
 \subsubsection{Using a FrameSet to calibrate a data cube or table}
 
