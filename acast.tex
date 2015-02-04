@@ -872,7 +872,7 @@ Python:
 \end{verbatim}
 
 will, if possible, generate a Mapping from \texttt{frame1} to
-\texttt{frame2}. The return Mapping is encapsulated within a FrameSet that
+\texttt{frame2}. The returned Mapping is encapsulated within a FrameSet that
 also includes copies of \texttt{frame1} and \texttt{frame2}.
 
 Likewise, the SpecFrame class encapsulates all the meta-data needed to
@@ -880,16 +880,16 @@ create Mappings between any pair of supported spectral coordinate system,
 including rest frequency, standard of rest, celestial reference position,
 etc.
 
-This principle, that each class of Frame contains all the meta-data and
+The principle that each class of Frame contains all the meta-data and
 intelligence required to create a Mapping between any two coordinate
-systems within the Frame's domain, extends to compound Frames as well
+systems within the Frame's domain, extends to compound Frames as well as
 atomic Frames, as described in the next section. The domain associated
 with a specific Frame is stored as a simple string such as "SKY",
 "SPECTRUM", "TIME", etc.
 
 The base Frame class itself is slightly unusual in that it can be used to
 describe any generic domain, and is restricted to a single Cartesian
-coordinate system withi that domain. The domain associated with a basic
+coordinate system within that domain. The domain associated with a basic
 Frame is specified by the caller and can be any arbitrary string. Clearly,
 this restricts the usefulness of a basic Frame (compared to other more
 specialised classes of Frames) in that it is not possible to include any
@@ -898,23 +898,22 @@ the domain. The only exception to this is that the basic Frame class
 knows how to convert between different dimensionally equivalent units.
 Thus the implementation of the Convert method provided by the basic Frame
 class can generate a Mapping between two basic Frames if they have the
-same domain name, the same number of axes, and the axes have different
-but dimesionally equivalent units.
+same domain name, the same number of axes, and the axes have dimesionally
+equivalent units.
 
 \subsubsection{Classes of Frame Provided by AST}
 AST provides several classes of Frame that describe different specialised
-domains. As with Mappings, these canbe divided into \emph{atomic} Frames that
-describe  single specific domain, and \emph{compound} Frames that combine
+domains. As with Mappings, these can be divided into \emph{atomic} Frames that
+describe a single specific domain, and \emph{compound} Frames that combine
 together other Frames (atomic or compound) to create a Frame describing a
-domain of higher dimensionality.
-
-The atomic Frame classes are:
+domain of higher dimensionality. The atomic Frame classes are:
 
 \begin{description}
 \item[Frame:] An arbitrary N-dimensional domain with a single Cartesian
 coordinate system.
 \item[FluxFrame:] A 1-dimensional domain describing several forms of flux
-measurement systems (all measured at a single spectral position).
+measurement systems (all measured at a single spectral position). In this
+case, the ``axis value'' represents a flux value.
 \item[SkyFrame:] A 2-dimensional domain describing several celestial
 coordinate systems.
 \item[SpecFrame:] A 1-dimensional domain describing several spectral
@@ -932,15 +931,61 @@ The following compound Frame classes are provided:
 \item[SpecFluxFrame :] Combines a FluxFrame with a SpecFrame.
 \end{description}
 
-
-
-
 \subsubsection{Compound Frames}
-Converting between compound Frames, potentially with different numbers of
-axes (e.g. converting between a (RA,Dec) Frame, and a (wavelength,l,b)
-CmpFrame).
+The \emph{CmpFrame} (compound Frame) class describes a coordinate system
+that combines the axes from two other Frames, in any order. The name of
+the domain associated with a CmpFrame is constructed automatically from
+the domain names of the two component Frames. For instance if a CmpFrame
+contains a SkyFrame and a SpecFrame, then its domain name will be
+"SKY-SPECTRUM".
+
+As described above, each class of Frame provides a \emph{Convert} method
+that determines if a Mapping can be created from an instance of the specific
+Frame class to any other Frame. In general, this will only be possible
+between instances of the same Frame class (i.e. Frames that represent
+alternative coordinates systems within the same physical domain).
+However, the implementation of the Convert method supplied by the
+CmpFrame class allows a Mapping to be created between a CmpFrame and
+either of the two component Frames. So for instance a CmpFrame describing
+the ``SKY-SPECTRUM'' domain could be matched with any of the following:
+
+\begin{itemize}
+\item Another CmpFrame describing the SKY-SPECTRUM domain.
+\item Another CmpFrame describing the SPECTRUM-SKY domain.
+\item A SkyFrame (i.e. a Frame describing the SKY domain).
+\item A SpecFrame (i.e. a Frame describing the SPECTRUM domain).
+\end{itemize}
+
+If the destination Frame has fewer axes than the source Frame, then the
+Mapping will contain a \emph{permMap} - an atomic Mapping that permutes
+and selects a subset of its input axes\footnote{The inverse Mapping will
+either supply a specified fixed value, or a ``bad'' (i.e. missing) value
+for the ``missing'' axes.}.
+
+So for instance, if a general purpose program reads the WCS from a data
+file of arbitrary dimensionality and wants to ask the question ``can I
+determine the ICRS (RA,Dec) of each pixel position?'' it can create a
+SkyFrame describing ICRS (RA,dec) and then use the Convert method to see
+if a Mapping can be created from the WCS Frame read from the data file to
+the \emph{template} SkyFrame describing the required coordinate system.
+This will allow ICRS (RA,Dec) to be determined for any 2-dimensional data
+file calibrated in any of the support celestial coordinates systems, and
+also any multi-dimensional data file that contains a pair of celestial
+coordinate axes.
 
 \subsection{FrameSets}
+
+The \emph{FrameSet} class represents a network of inter-related
+coordinate systems in the form of a tree-structure in which each node
+is a Frame, with the nodes being connected together by Mappings. It is
+usual (although not required) for each Frame in a FrameSet to describe a
+different domain. A single FrameSet can be used, for instance, to provide
+a complete description of the WCS associated with a data set. In this
+case, one of the Frames represents pixel coordinates, and the other
+Frames represent a collection of alternative world coordinate systems.
+For instance, a FrameSet describing an image taken by a telescope may
+have three Frames describing pixel coordinates, focal plane coordinates
+and sky coordinates.
 
 \subsubsection{Base and Current Frames}
 
@@ -953,17 +998,20 @@ are required by subsequent user (code or human). This will often be
 some form of WCS, such as (RA,Dec), but could potentially be any of
 the Frames available in the FrameSet.
 
+\subsubsection{Using a FrameSet to calibrate a data cube or table}
+
+The base Frame represents grid coords, and the current Frame
+represents WCS coords.  Explain about the usefulness of PIXEL versus
+GRID coordinates.
+
 \subsubsection{Integrity restoration}
 
 Changing a Frame to represent a different coordinate system should
 cause the Mappings that connect it to the other Frames in the FrameSet
 to be updated.
 
-\subsubsection{Using a FrameSet to calibrate a data cube or table}
+\subsubsection{Searching a FrameSet for a Frame with Required Properties}
 
-The base Frame represents grid coords, and the current Frame
-represents WCS coords.  Explain about the usefulness of PIXEL versus
-GRID coordinates.
 
 \subsection{Regions}
 
