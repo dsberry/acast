@@ -707,6 +707,10 @@ inverse transformation from another.
 matrix of an encapsulated Mapping.
 \end{description}
 
+All classes of Mapping are immutable. That is, a Mappng cannot be changed
+once it has been created. This is unlike Frame and FrameSet objects, which
+\emph{can} be changed.
+
 \subsubsection{Compound Mappings}
 \label{sec:cmpmap}
 
@@ -838,6 +842,8 @@ As described in section~\ref{sec:model}, each instance of the Frame class
 contains all the meta-data necessary to give a complete description of
 a particular coordinate system. Each Frame is associated with a specific
 \emph{domain} as explained in the next section.
+
+Unlike Mappings, the properties of a Frame can be changed at any time.
 
 \subsubsection{What is a Domain?}
 AST uses the word \emph{domain} to refer to a physical (or abstract)
@@ -999,11 +1005,21 @@ series into a single \emph{CmpMap} (compound Mapping).
 The FrameSet class also provides a method, \emph{GetFrame}, to
 return any nominated Frame from a FrameSet.
 
+New Frames can be added to an existing FrameSet at any point in the tree
+structure. To so so, the caller must provide a Mapping that maps positions
+from an existing Frame in the FrameSet to the new Frame.
+
+Frames can also be removed from a FrameSet. If the Frame is a leaf node
+in the tree structure, then it is simply removed, together with the
+Mapping that  connects it to its parent Frame. If the Frame is \emph{not}
+a leaf node, the Frame is removed but the Mapping that connects it to its
+parent Frame is retained so that its child Frames can still be reached.
+
 \subsubsection{Base and Current Frames}
 Two of the most common operations provided by systems such as AST are 1)
 converting positions from one Frame to another, and 2) enquiring or using
 the properties of a Frame. Performing these two operations repeatedly
-would become tedious if each such operation involed separate calls to
+would become tedious if each such operation involved separate calls to
 \emph{GetMapping} or \emph{GetFrame} to extract the required Mapping or
 Frame from the FrameSet. To avoid this, AST is implemented in such a way
 that the FrameSet class effectively inherits from both the Mapping class
@@ -1035,21 +1051,109 @@ This means that the FrameSet can be used as a Mapping from pixel
 coordinates to primary WCS, and can also be used as a Frame to determine
 the properties of the primary WCS.
 
-The caller is free to change the base and/or current Frames at any time.
+The caller is free to select new base and/or current Frames at any time.
 
-\subsubsection{Using a FrameSet to calibrate a data cube or table}
+\subsubsection{Integrity Restoration}
 
-The base Frame represents grid coords, and the current Frame
-represents WCS coords.  Explain about the usefulness of PIXEL versus
-GRID coordinates.
+Consider the simple case mentioned above where a FrameSet is used to
+describe the WCS in a 2-dimensional image. The FrameSet could for
+instance contain a pixel Frame as the base Frame and an (RA,Dec) Frame as
+the current Frame, connected together by a suitable Mapping. It is
+clearly possible to break the integrity of such a FrameSet, such that the
+Mapping no longer accurately describes the transformation from pixel
+coordinates to world coordinates. One obvious way in which this could be
+done is to change the current Frame so that it describes, say, galactic
+coordinates rather than (RA,Dec). The Mapping is left unchanged and so will
+still generate (RA,Dec) values, even though the FrameSet now claims that
+these are galactic coordinates\footnote{Note, Mappings are immutable and so the
+integrity fo a FrameSet cannot be broken by making changes to a Mapping.}.
 
-\subsubsection{Integrity restoration}
+In order to retain the integrity of the FrameSet, the Mapping must
+be replaced with one that generates the appropriate galactic coordinate
+values rather than (RA,Dec) values. One way in which this could be done is as
+follows, starting from the original unmodified FrameSet:
 
-Changing a Frame to represent a different coordinate system should
-cause the Mappings that connect it to the other Frames in the FrameSet
-to be updated.
+\begin{enumerate}
+\item Create a copy of the current Frame (i.e. the (RA,Dec) Frame), and
+change the attributes of the copy so that it describes Galactic
+coordinates.
+\item Use the \emph{Convert} method on the (RA,Dec) Frame to generate a
+Mapping from (RA,Dec) to galactic coordinates.
+\item Add the galactic coordinates Frame into the FrameSet, using the
+above Mapping to connect it to the existing (RA,Dec) Frame.
+\item Remove the original (RA,Dec) Frame.
+\end{enumerate}
+
+The final FrameSet is unchanged in the sense that it still contains two
+Frames, but now the Mapping that connects them correctly generates the values
+described by the new current Frame (i.e. galactic coordinates).
+
+However, the above process is quite involved and prone to error, and so
+the FrameSet class itself provides generalised ``integrity restoration''
+along the same lines, meaning that client code is relieved of the
+responsibility. Whenever any change is made to the current Frame within a
+FrameSet, the FrameSet class first takes a copy of the original Frame and
+makes the requested change to the copy. It then uses the \emph{Convert}
+method to generate a Mapping from the old Frame to the modified copy. It
+then adds the modified copy into the FrameSet, using the Mapping returned
+by \emph{Convert} to connect it the original unmodified Frame. It finally
+removes the original original Frame.
+
+In summary, the integrity restoration system within the FrameSet class
+means that whenever the properties of the current Frame are changed within a
+FrameSet, the Mappings within the FrameSet are automatically modified
+accordingly.
+
+However there are times when this may not be what is wanted. For
+instance, if a mistake is made when setting the properties of a Frame
+prior to adding it into a FrameSet, then it should be possible to correct
+those mistakes without causing changes to be made to the Mappings within
+the FrameSet. This is possible by first getting a reference to the Frame
+using the FrameSet's \emph{GetFrame} method, and then changing the Frame
+properties using that Frame reference, rather than the original FrameSet
+reference. Integrity restoration only occurs when the current Frame properties
+are changed via a FrameSet reference.
 
 \subsubsection{Searching a FrameSet for a Frame with Required Properties}
+As described earlier, the \emph{Convert} method defined by the Frame
+class attempts to find a Mapping between two arbitrary
+Frames\footnote{This may or may not be possible depending on the nature
+of the two Frames.}. Since the FrameSet class inherits the methods of the
+Frame class, the \emph{Convert} method can also be used on FrameSets. In
+this case the \emph{Convert} method will search through all the Frames
+in the FrameSet, starting with the current Frame, until a Frame is found
+for which a Mapping can be created. Since, in general, the Frames within a
+FrameSet all describe different domains, it is unlikely that more than one
+Frame will generate a Mapping, but the serach order can be controlled by
+the caller in order to assign priority to specific Frames.
+
+This allows code to search a FrameSet for a Frame that has specific
+properties. For instance, a Frame can be created with the required
+properties and then used as a ``template'' to search a FrameSet:
+
+\begin{verbatim}
+   template = Ast.SkyFrame()
+   result = frameset.convert( template )
+   if result == None:
+      print( "The supplied FrameSet does not contain a celestial "
+             "coordinate system" )
+\end{verbatim}
+
+In this example \texttt{frameset} is searched for a SkyFrame. If found, a
+FrameSet is returned in which the base Frame is the matching Frame from
+\texttt{frameset}, and the current Frame is a copy of \texttt{template}.
+In addition, the base Frame of \texttt{frameset} is set to indicate the
+matching Frame. If no matching Frame is found, a null reference is
+returned by \emph{Convert}.
+
+In the above example the specific celestial coordinate system represented
+by \texttt{template} was left unspecified when the SkyFrame was created.
+Consequently, the copy of \texttt{template} included in the
+\texttt{result} FrameSet returned by \emph{Convert} inherits the
+celestial coordinate system of the matching Frame within
+\texttt{frameset}. If a specific system was specified when \texttt{template}
+was created, then that system would be given priority and be included in
+the returned \texttt{result} FrameSet.
 
 
 \subsection{Regions}
