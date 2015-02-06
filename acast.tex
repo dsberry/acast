@@ -1054,7 +1054,7 @@ the properties of the primary WCS.
 The caller is free to select new base and/or current Frames at any time.
 
 \subsubsection{Integrity Restoration}
-
+\label{sec:integrity}
 Consider the simple case mentioned above where a FrameSet is used to
 describe the WCS in a 2-dimensional image. The FrameSet could for
 instance contain a pixel Frame as the base Frame and an (RA,Dec) Frame as
@@ -1134,7 +1134,7 @@ properties and then used as a ``template'' to search a FrameSet:
 \begin{verbatim}
    template = Ast.SkyFrame()
    result = frameset.convert( template )
-   if result == None:
+   if result is None:
       print( "The supplied FrameSet does not contain a celestial "
              "coordinate system" )
 \end{verbatim}
@@ -1155,19 +1155,33 @@ celestial coordinate system of the matching Frame within
 was created, then that system would be given priority and be included in
 the returned \texttt{result} FrameSet.
 
-
 \subsection{Regions}
 \label{sec:region}
 
-These are the objects that contain actual axis values. They
-encapsulate a Frame and set of positions defined within the
-Frame. They can be transformed automatically into other Frames by
-either changing the properties of the Frame or by using a Mapping to
-map them into a new specified Frame.
+Previous sections have described:
 
-The simplest subclass of Region is the PointList that represents one
-or more positions within the Frame.  In practice, PointLists are
-rarely used. This is because a typical application is usually
+\begin{enumerate}
+\item \emph{Mappings}, which transform numerical axis values.
+\item \emph{Frames}, which describe what those numerical axis values
+represent.
+\item \emph{FrameSets}, which associate Mappings with Frames.
+\end{enumerate}
+
+However, nothing has been said yet about how the actual axis values
+themselves are stored. This section address this issue. In most cases,
+the calling application code will organise and store the axis values
+itself in some manner, creating appropriate Mappings and Frames to
+process them. However AST also provides a collection of \emph{Region}
+classes, each of which encapsulates the axis values at a set of positions,
+along with a Frame describing the coordinate system to which those axis
+values refer.  As the name implies, most Region classes describe a
+specific region within the encapsulated Frame. So for instance there
+are Region subclasses that describe circles, boxes, ellipses, polygon,
+\emph{etc}.
+
+The simplest subclass of Region is the \emph{PointList} that represents
+one or more unordered positions within the Frame.  In practice, PointLists
+are rarely used. This is because a typical application is usually
 interested in positions that it has determined itself in some way, and
 so can process them directly using Mappings without the need to create
 an intermediate container object such as a PointList. Applications
@@ -1182,32 +1196,38 @@ then extract the coordinates from the transformed PointList. Doing so
 can potentially introduces large overheads that can increase the
 overall time taken to do the transformation.
 
-Other subclasses include, Circle, Box, Ellipse, \emph{etc}. Compound Regions
-can be formed to represent the union or intersection of two
-Regions. The Prism class allows Regions to be extruded into other
+The \emph{CmpRegion} class is a compound Region that represents the
+union or intersection of two other Regions. Another form of compound
+Region is the Prism class that allows Regions to be extruded into other
 dimensions.
 
-Regions can behave as either Mappings or Frames. When Used as a
-Mapping, positions within the Region are left unchanged, and positions
-outside the Region are set to a ``bad'' value.
+Like the FrameSet class, the base Region class inherits from both the
+Frame class and the Mapping class. When used as a Frame, it behaves like
+the encapsulated Frame. When used as a Mapping, it behaves like a unit
+transformation for positions that are inside the region, but returns
+``bad'' axis values for positions that are outside the region.
 
-Regions can contain a FrameSet in place of a Frame. In this case, the
-shape and extent of the Region are defined within the base Frame of
-the FrameSet, and the Region notionally represents a ``view'' of this
-shape transformed into the current Frame of the FrameSet. For
-instance, a ``Box'' could be created to represent the rectangular extent
-of an image in pixel coordinates. Such a Box will contain a Frame
-describing pixel coordinates, the pixel coordinates at the centre of
-the image, and the extent of each dimension of the image (in
-pixels). The Frame in this Box could be replaced by a FrameSet in
-which the base Frame is again pixel coordinates, but the current Frame
-is (RA,Dec). Internally, the Box still represents a rectangular area
-in pixel coordinates, but is now viewed externally as the
-corresponding curvilinear area in the (RA,Dec) Frame. When the Box is
-used as a Mapping, it will first transform each position from (RA,Dec)
-into pixel coordinates, and then test these transformed positions to
-see if they are within the rectangular area of pixel coordinates
-described by the Box.
+If the properties of the encapsulated Frame are changed so that it
+describes a different coordinate system, the encapsulated axis values are
+automatically transformed into the new system by a process similar to
+that described for FrameSets in section~\ref{sec:integrity}.
+
+Regions can encapsulate a FrameSet in place of a Frame. In this case, the
+shape and extent of the Region are defined within the base Frame of the
+FrameSet, and the Region notionally represents a ``view'' of this shape
+transformed into the current Frame of the FrameSet. For instance, a
+``Box'' could be created to represent the rectangular extent of an image
+in pixel coordinates. Such a Box will contain a Frame describing pixel
+coordinates, the pixel coordinates at the centre of the image, and the
+extent of each dimension of the image (in pixels). The Frame in this Box
+could be replaced by a FrameSet in which the base Frame is again pixel
+coordinates, but the current Frame is (RA,Dec). Internally, the Box still
+represents a rectangular area in pixel coordinates, but is now viewed
+externally as the corresponding curvilinear area in the (RA,Dec) Frame.
+When the Box is used as a Mapping, it will first transform each position
+from (RA,Dec) into pixel coordinates, and then test these transformed
+positions to see if they are within the rectangular area of pixel
+coordinates described by the Box.
 
 \section{Fields of Application}
 
