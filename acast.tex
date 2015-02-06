@@ -50,6 +50,20 @@
 \usepackage[pdftex,pdfpagemode={UseOutlines},bookmarks,bookmarksopen,colorlinks,linkcolor={blue},citecolor={green},urlcolor={red}]{hyperref}
 \usepackage{hypernat}
 
+\usepackage{listings}
+\usepackage{color}
+
+\definecolor{mygreen}{rgb}{0,0.5,0}
+\lstset{
+  language=Python,
+  basicstyle=\small\ttfamily,
+  showstringspaces=false,
+  stringstyle=\color{red},
+  keywordstyle=\bfseries\color{mygreen},
+  morecomment=[l]{/},
+  commentstyle=\color{blue},
+}
+
 %% The lineno packages adds line numbers. Start line numbering with
 %% \begin{linenumbers}, end it with \end{linenumbers}. Or switch it on
 %% for the whole article with \linenumbers after \end{frontmatter}.
@@ -873,9 +887,9 @@ vice-versa. The process of creating this Mapping is implemented within
 the \emph{Convert} method of the base Frame class. For instance, in
 Python:
 
-\begin{verbatim}
-   my_frameset = frame1.convert( frame2 )
-\end{verbatim}
+\begin{lstlisting}
+my_frameset = frame1.convert( frame2 )
+\end{lstlisting}
 
 will, if possible, generate a Mapping from \texttt{frame1} to
 \texttt{frame2}. The returned Mapping is encapsulated within a FrameSet that
@@ -1131,13 +1145,12 @@ This allows code to search a FrameSet for a Frame that has specific
 properties. For instance, a Frame can be created with the required
 properties and then used as a ``template'' to search a FrameSet:
 
-\begin{verbatim}
-   template = Ast.SkyFrame()
-   result = frameset.convert( template )
-   if result is None:
-      print( "The supplied FrameSet does not contain a celestial "
-             "coordinate system" )
-\end{verbatim}
+\begin{lstlisting}
+template = Ast.SkyFrame()
+result = frameset.convert( template )
+if result is None:
+  print( "No celestial coord system found" )
+\end{lstlisting}
 
 In this example \texttt{frameset} is searched for a SkyFrame. If found, a
 FrameSet is returned in which the base Frame is the matching Frame from
