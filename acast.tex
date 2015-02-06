@@ -904,8 +904,8 @@ The principle that each class of Frame contains all the meta-data and
 intelligence required to create a Mapping between any two coordinate
 systems within the Frame's domain, extends to compound Frames as well as
 atomic Frames, as described in the next section. The domain associated
-with a specific Frame is stored as a simple string such as "SKY",
-"SPECTRUM", "TIME", etc.
+with a specific Frame is stored as a simple string such as ``SKY'',
+``SPECTRUM'', ``TIME'', etc.
 
 The base Frame class itself is slightly unusual in that it can be used to
 describe any generic domain, and is restricted to a single Cartesian
@@ -957,7 +957,7 @@ that combines the axes from two other Frames, in any order. The name of
 the domain associated with a CmpFrame is constructed automatically from
 the domain names of the two component Frames. For instance if a CmpFrame
 contains a SkyFrame and a SpecFrame, then its domain name will be
-"SKY-SPECTRUM".
+``SKY-SPECTRUM''.
 
 As described above, each class of Frame provides a \emph{Convert} method
 that determines if a Mapping can be created from an instance of the specific
