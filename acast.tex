@@ -855,6 +855,18 @@ when a neighbouring Mapping is asked to merge with its neighbours. The
 astSimplify method takes care to spot such loops and to assign priority
 to one or the other of the conflicting Mappings.
 
+\subsubsection{Missing or Bad Axis Values}
+\label{sec:bad}
+AST flags unknown or missing axis values using a special numerical value,
+known as the ``bad'' value. If an input position supplied to a Mapping
+contains one or more bad axis values, then in general all output axis
+values will be bad\footnote{One exception is that a parallel CmpMap may
+be able to generate non-bad values for some of its output axes.}.
+
+Mappings may also generate bad output values if the input position
+corresponds to a singularity in the transformation, or is outside the
+region in which the transformation is defined.
+
 \subsection{Frames and Domains}
 As described in section~\ref{sec:model}, each instance of the Frame class
 contains all the meta-data necessary to give a complete description of
@@ -1191,38 +1203,51 @@ itself in some manner, creating appropriate Mappings and Frames to
 process them. However AST also provides a collection of \emph{Region}
 classes, each of which encapsulates the axis values at a set of positions,
 along with a Frame describing the coordinate system to which those axis
-values refer.  As the name implies, most Region classes describe a
-specific region within the encapsulated Frame. So for instance there
-are Region subclasses that describe circles, boxes, ellipses, polygon,
-\emph{etc}.
+values refer.  As the name implies, each Region subclass describe a
+specific region within the encapsulated Frame.
 
-The simplest subclass of Region is the \emph{PointList} that represents
-one or more unordered positions within the Frame.  In practice, PointLists
-are rarely used. This is because a typical application is usually
-interested in positions that it has determined itself in some way, and
-so can process them directly using Mappings without the need to create
-an intermediate container object such as a PointList. Applications
-that for instance displays the world coordinates of the cursor, or the
-centroid position of an object, will usually obtain the axis values in
-some ``base'' system such as graphics screen coordinates or pixel
-coordinates, and will then transform them directly into the coordinate
-system of interest using a suitable Mapping that it has obtained
-previously. There is no need to first wrap the axis values in a
-PointList, transform the PointList to a new coordinate system, and
-then extract the coordinates from the transformed PointList. Doing so
-can potentially introduces large overheads that can increase the
-overall time taken to do the transformation.
+The simplest subclass of Region is the \emph{PointList} that represents a
+simple list of one or more unconnected points within the Frame.  In
+practice, PointLists are rarely used. This is because a typical
+application is usually interested in positions that it has determined
+itself in some way, and so can process them directly using Mappings
+without the need to create an intermediate container object such as a
+PointList. Applications that for instance displays the world coordinates
+of the cursor, or the centroid position of an object, will usually obtain
+the axis values in some ``base'' system such as graphics screen
+coordinates or pixel coordinates, and will then transform them directly
+into the coordinate system of interest using a suitable Mapping that it
+has obtained previously. There is no need to first wrap the axis values
+in a PointList, transform the PointList to a new coordinate system, and
+then extract the coordinates from the transformed PointList. Doing so can
+potentially introduces large overheads that can increase the overall time
+taken to do the transformation.
+
+Other subclasses of Region exist to describe circles, ellipses, boxes
+polygons, \emph{etc}. For instance, a Circle encapsulates two positions
+within a Frame - one being the centre of the required circle and the
+other being a point on its perimeter. A Polygon is similar to a PointList
+in that it encapsulates an arbitrary list of points. But in a Polygon,
+the points represent the vertices of a polygon with non-zero area, rather
+than a list of unconnected points with zero area.
 
 The \emph{CmpRegion} class is a compound Region that represents the
-union or intersection of two other Regions. Another form of compound
+union or intersection of two other Regions.  Another form of compound
 Region is the Prism class that allows Regions to be extruded into other
-dimensions.
+dimensions\footnote{Some Region classes, such as Polygon and Ellipse, are
+intrinsically 2-dimensional, whereas other such as Circle and Box, can
+have more than 2 dimensions.}. For instance, a 4-dimensional Prism can be
+formed by combining a 2-dimensional Circle and a 2-dimensional Box. A
+4-dimensional position is considered to be inside the Prism if the values
+on axes 1 and 2 are inside the Circle, and the values on axes 3 and 4 are
+inside the Box.
 
 Like the FrameSet class, the base Region class inherits from both the
 Frame class and the Mapping class. When used as a Frame, it behaves like
 the encapsulated Frame. When used as a Mapping, it behaves like a unit
 transformation for positions that are inside the region, but returns
-``bad'' axis values for positions that are outside the region.
+``bad'' axis values for positions that are outside the region (see
+section~\ref{sec:bad}).
 
 If the properties of the encapsulated Frame are changed so that it
 describes a different coordinate system, the encapsulated axis values are
