@@ -338,7 +338,7 @@ these expressions, this greatly increased the set of functional forms
 that could be represented. The expressions themselves (encoded as
 character strings) and the associated parameter values could easily be
 stored in astronomical datasets. Typically, one set of expressions would
-relate pixel coordinates to world cordinates (e.g. sky coordinates) and
+relate pixel coordinates to world cordinates (e.g., sky coordinates) and
 a second, optional, set would define the inverse transformation. The
 expression syntax was powerful enough to represent a wide range of map
 projections plus many other transformations into alternative world
@@ -573,7 +573,7 @@ output space need not be the same as that of the input space.}.
 A \emph{coordinate system} is a collection of meta-data describing a set of
 one or more axes. This will include:
 \begin{itemize}
-\item the number of axes (i.e. dimensionality of the space)
+\item the number of axes (i.e., dimensionality of the space)
 \item the physical quantity described by each axis
 \item the units used by each axis
 \item the geometry of the space that they describe (flat, spherical,
@@ -978,7 +978,7 @@ contains a SkyFrame and a SpecFrame, then its domain name will be
 As described above, each class of Frame provides a \emph{Convert} method
 that determines if a Mapping can be created from an instance of the specific
 Frame class to any other Frame. In general, this will only be possible
-between instances of the same Frame class (i.e. Frames that represent
+between instances of the same Frame class (i.e., Frames that represent
 alternative coordinates systems within the same physical domain).
 However, the implementation of the Convert method supplied by the
 CmpFrame class allows a Mapping to be created between a CmpFrame and
@@ -988,14 +988,14 @@ the ``SKY-SPECTRUM'' domain could be matched with any of the following:
 \begin{itemize}
 \item Another CmpFrame describing the SKY-SPECTRUM domain.
 \item Another CmpFrame describing the SPECTRUM-SKY domain.
-\item A SkyFrame (i.e. a Frame describing the SKY domain).
-\item A SpecFrame (i.e. a Frame describing the SPECTRUM domain).
+\item A SkyFrame (i.e., a Frame describing the SKY domain).
+\item A SpecFrame (i.e., a Frame describing the SPECTRUM domain).
 \end{itemize}
 
 If the destination Frame has fewer axes than the source Frame, then the
 Mapping will contain a \emph{permMap} - an atomic Mapping that permutes
 and selects a subset of its input axes\footnote{The inverse Mapping will
-either supply a specified fixed value, or a ``bad'' (i.e. missing) value
+either supply a specified fixed value, or a ``bad'' (i.e., missing) value
 for the ``missing'' axes.}.
 
 So for instance, if a general purpose program reads the WCS from a data
@@ -1104,7 +1104,7 @@ values rather than (RA,Dec) values. One way in which this could be done is as
 follows, starting from the original unmodified FrameSet:
 
 \begin{enumerate}
-\item Create a copy of the current Frame (i.e. the (RA,Dec) Frame), and
+\item Create a copy of the current Frame (i.e., the (RA,Dec) Frame), and
 change the attributes of the copy so that it describes Galactic
 coordinates.
 \item Use the \emph{Convert} method on the (RA,Dec) Frame to generate a
@@ -1116,7 +1116,7 @@ above Mapping to connect it to the existing (RA,Dec) Frame.
 
 The final FrameSet is unchanged in the sense that it still contains two
 Frames, but now the Mapping that connects them correctly generates the values
-described by the new current Frame (i.e. galactic coordinates).
+described by the new current Frame (i.e., Galactic coordinates).
 
 However, the above process is quite involved and prone to error, and so
 the FrameSet class itself provides generalised ``integrity restoration''
@@ -1369,7 +1369,7 @@ have a base Frame that describes millimetres from the bottom left corner
 of the plotting area.
 
 The current Frame within a Plot corresponds to ``user''  coordinates ---
-\emph{i.e.} the coordinate system in which the application code wishes to
+\emph{i.e.}, the coordinate system in which the application code wishes to
 specify positions. Since the Plot is a form of FrameSet, it will also
 include the Mappings needed to transform ``user'' coordinates into the
 corresponding graphics coordinates. A typical Plot may for instance
@@ -1382,7 +1382,7 @@ bounds of a viewport within this intermediate system must also be
 supplied. The FrameSet that \emph{is} the Plot is then created by adding
 an extra Frame representing graphics coordinates into the supplied
 FrameSet. This Frame becomes the base Frame in the Plot, and is connected
-to the intermediate coordinate Frame (\emph{e.g.} pixel coordinates)
+to the intermediate coordinate Frame (\emph{e.g.}, pixel coordinates)
 using a Mapping that maps the requested viewport within intermediate
 coordinates onto the plotting area --- either linearly or
 logarithmically. In effect, the Plot becomes attached to the plotting
@@ -1391,14 +1391,14 @@ to (say) an image.
 
 The Plot class has methods that can draw markers, geodesic curves, text
 strings, \emph{etc}. The application code supplies the positions of these
-objects within the ``user'' coordinate system (\emph{i.e.} the current
-Frame of the Plot --- \emph{e.g.} (RA,Dec)). The Plot class then uses the
+objects within the ``user'' coordinate system (\emph{i.e.}, the current
+Frame of the Plot --- \emph{e.g.}, (RA,Dec)). The Plot class then uses the
 Mappings stored within the Plot to transform them into the graphics
-coordinate system (\emph{i.e.} the base Frame of the Plot), before
+coordinate system (\emph{i.e.}, the base Frame of the Plot), before
 invoking the appropriate wrapper functions to instruct the underlying
 graphics system to draw the required primitives. Whilst this is a fairly
 simple process for items such as graphical markers that only have one
-associated coordinate (\emph{i.e.} the centre of the marker), it is a
+associated coordinate (\emph{i.e.}, the centre of the marker), it is a
 more complex process for items such as geodesic curves that span a wide
 range of different coordinates. In this case, the curve is represented by
 a set of positions spread along the curve in user coordinates. All these
@@ -1524,7 +1524,7 @@ The most important public methods of the base Mapping class are:
 
 \begin{description}
 
-\item[astInvert:] Invert a Mapping (i.e. swap the input and output spaces).
+\item[astInvert:] Invert a Mapping (i.e., swap the input and output spaces).
 
 \item[astLinearApprox:] Create a new Mapping which is a linear approximation
 to the supplied Mapping.
