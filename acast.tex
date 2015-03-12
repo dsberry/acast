@@ -1271,15 +1271,198 @@ from (RA,Dec) into pixel coordinates, and then test these transformed
 positions to see if they are within the rectangular area of pixel
 coordinates described by the Box.
 
-\section{Fields of Application}
+\section{Serialisation, and FITS-WCS}
 
-\subsection{Data resampling and regridding}
+\section{Fields of Application}
+This section describes some of the ways in which AST can be used.
+
+Whilst the AST library provides many facilities that are useful when
+describing and using the WCS information attached to a data array, it
+is not limited to that field. Its generalised design enables it to be used
+in any situation where relationships between several different coordinate
+systems need to be managed. Just to emphasise that point, WCS handling is
+included as the last item in this section.
 
 \subsection{Generalised Plotting}
 
-\subsection{Flux and data unit transformation}
+Most plotting operations involve the use of several different Cartesian
+coordinate systems. A typical graphics package may need to deal with:
 
-\section{Things we would do differently now}
+\begin{itemize}
+\item A system defined by the graphics hardware (for instance, pixel indices
+on a computer screen, \emph{etc}).
+
+\item A system describing some normalised version of the above system (for
+instance, a system in which the shortest edge of the screen is normalized
+to unit length).
+
+\item A system describing a restricted window within the total plotting space
+(for instance, a system in which the shortest edge of the window is normalized
+to unit length).
+
+\item A system describing a restricted window within the total plotting space
+(for instance, a system in which the shortest edge of the window is normalized
+to unit length).
+
+\item A user-supplied system that results in the graphics window being mapped
+onto some specified viewport within Cartesian ``user'' coordinates.
+
+\end{itemize}
+
+Whilst in principle AST could be used internally within such a graphics
+package to handle these different coordinate systems, this has not (so
+far) been done. A more common usage of AST is to allow application
+software to define extra --- potentially non-linear --- coordinate
+systems, and to integrate them with the coordinate systems provided by an
+existing graphics package. For this purpose AST provides two classes ---
+\emph{Plot}, which provides two-dimensional plotting facilities, and
+\emph{Plot3D}, which provides three-dimensional plotting facilities.
+
+\subsubsection{Use of External Plotting Packages}
+The plotting classes within AST do not themselves include any facilities
+for placing ``ink onto paper'' --- an external graphic library must be
+supplied to draw graphical primitives such as straight lines, markers and
+character strings. The plotting classes within AST will then use the
+primitive facilities of this underlying graphics system to draw more complex
+entities such as annotated coordinate grids, \emph{etc}.
+
+This separation between coordinate handling and drawing enables the
+sophisticated plotting capabilities of AST to be used within many
+different systems and languages\footnote{It is known that AST graphics
+have been used with plotting packages written in Java, Perl, Tk-Tcl and
+Python, as well as C and Fortran.}.
+
+The underlying graphics system can be specified in two ways:
+
+\begin{enumerate}
+\item At build-time. In this method, a module must be supplied (callable from
+C) that provides implementations of a set of wrapper functions that AST
+uses to perform primitive drawing operations. Each such wrapper function
+makes appropriate calls to the underlying graphics system to perform its
+work. This module is linked into the executable at build-time, in place
+of the default module provided by AST.
+\item At run-time. In this method, application code registers pointers to
+the graphics wrapper functions with AST, whilst the executable is running.
+The registered function pointers are used in preference to any functions
+specified at build-time.
+\item at run-time.
+\end{enumerate}
+
+The AST library includes modules that allow the PGPLOT graphics package to
+be used for drawing by both the Plot class and the Plot3D class (see the
+following sections).
+
+\subsubsection{Two Dimensional Plotting}
+A \emph{Plot} is a subclass of FrameSet and can therefore be considered
+to be a FrameSet `with some extra facilities''. A Plot does not represent
+the graphical content itself, but is a route through which plotting
+operations, such as drawing lines and curves, are conveyed on to a
+plotting surface to appear as visible graphics.
+
+When considered as a FrameSet, the base Frame within a Plot corresponds
+to the Cartesian coordinate system used to specify positions to the
+underlying graphics system\footnote{This coordinate system must have been
+defined previously using appropriate calls to the underlying graphics
+system.}. The bounds of the plotting area within this coordinate system must
+be specified when the Plot is created. A typical Plot may for instance
+have a base Frame that describes millimetres from the bottom left corner
+of the plotting area.
+
+The current Frame within a Plot corresponds to ``user''  coordinates ---
+\emph{i.e.} the coordinate system in which the application code wishes to
+specify positions. Since the Plot is a form of FrameSet, it will also
+include the Mappings needed to transform ``user'' coordinates into the
+corresponding graphics coordinates. A typical Plot may for instance
+have a current Frame that describes (RA,Dec) positions on the sky.
+
+When a Plot is created, an existing FrameSet must be supplied that
+includes the required ``user'' coordinate system together with some
+intermediate coordinate system (typically image pixel coordinates). The
+bounds of a viewport within this intermediate system must also be
+supplied. The FrameSet that \emph{is} the Plot is then created by adding
+an extra Frame representing graphics coordinates into the supplied
+FrameSet. This Frame becomes the base Frame in the Plot, and is connected
+to the intermediate coordinate Frame (\emph{e.g.} pixel coordinates)
+using a Mapping that maps the requested viewport within intermediate
+coordinates onto the plotting area --- either linearly or
+logarithmically. In effect, the Plot becomes attached to the plotting
+surface in rather the same way that a basic FrameSet might be attached
+to (say) an image.
+
+The Plot class has methods that can draw markers, geodesic curves, text
+strings, \emph{etc}. The application code supplies the positions of these
+objects within the ``user'' coordinate system (\emph{i.e.} the current
+Frame of the Plot --- \emph{e.g.} (RA,Dec)). The Plot class then uses the
+Mappings stored within the Plot to transform them into the graphics
+coordinate system (\emph{i.e.} the base Frame of the Plot), before
+invoking the appropriate wrapper functions to instruct the underlying
+graphics system to draw the required primitives. Whilst this is a fairly
+simple process for items such as graphical markers that only have one
+associated coordinate (\emph{i.e.} the centre of the marker), it is a
+more complex process for items such as geodesic curves that span a wide
+range of different coordinates. In this case, the curve is represented by
+a set of positions spread along the curve in user coordinates. All these
+positions are transformed into graphics coordinates before being plotted
+in the form of a ``poly-line''. The density of points varies along this
+line, and is chosen to ensure that any discontinuities or highly
+non-linear sections of the curve are drawn with reasonable accuracy.
+
+The most comprehensive drawing method supplied by the Plot class produces
+a complete set of annotated axes describing the area of user coordinates
+visible within the plotting area. Some examples are shown in
+Fig.~\ref{fig:2dplots}.
+
+\begin{figure*}[h]
+\centering
+\includegraphics[width=\textwidth]{2dplots}
+\caption{A selection of annotated axes created by the Plot class. Note,
+Plot only creates the annotated axes --- the background images were
+produced using PGPLOT directly. The PGPLOT library was used as the
+underlying graphics package for these plots.}
+\label{fig:2dplots}
+\end{figure*}
+
+\subsubsection{Three Dimensional Plotting}
+
+The \emph{Plot3D} class extends the Plot class to provide plotting
+facilities in three dimensions. The basic model is the same as for the
+Plot class --- a Plot3D object is a FrameSet in which the base Frame
+represents the 3-dimensional Cartesian coordinate system used by the
+underlying 3-dimensional plotting package, and the current Frame
+represents 3-dimensional ``user'' coordinates.
+
+The projection from 3-dimensional graphics coordinates onto a
+2-dimensional plotting surface is handled by the underlying graphics
+package. This may be suprising, given that AST could itself handle this
+sort of projection. But the decision was taken so that Plot3D graphics
+wrapper functions could use the full range of features offered by a
+dedicated 3-dimensional plotting packages, rather than restrict it to the
+more limited features offered by a typical 2-dimensional package.
+
+Fig.~\ref{fig:3dplot} shows an example of the 3-dimensional annotated axes
+produced by Plot3D.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\columnwidth]{3dplot}
+\caption{Annotated axes created by the Plot3D class. The 3D interface to the
+PGPLOT library included with AST was used as the underlying graphics package
+for these plots.}
+\label{fig:3dplot}
+\end{figure}
+
+
+\subsection{Flux and Data Unit Transformation}
+
+\subsection{WCS handling}
+
+\subsubsection{Data Resampling and Regridding}
+
+
+
+
+
+\section{Things we Would do Differently now}
 
 \begin{enumerate}
 
