@@ -1456,6 +1456,57 @@ for these plots.}
 
 \subsection{Flux and Data Unit Transformation}
 
+In the majority of scientific data sets, each data point has a
+\emph{position} and a \emph{value}. Whilst the concepts described in this
+paper may seem more naturally associated with the positional information,
+they can also be applied to the value (or values) associated with each
+data point. A position within some N-dimensional space is specified by a
+set of N axis values. Likewise, a value can also be represented by a set
+of axis values. In the majority of common cases data values are
+1-dimensional - for instance a temperature, or a sky brightness. But
+there are also some common multi-dimensional cases such as Stokes vector
+$(I,~Q,~U,~V)$.
+
+The functional division into Mappings, Frames and FrameSets  used
+throughout AST is equally applicable to the problem of describing data
+\emph{values} as it is to describing data \emph{positions}. To do so
+requires a set of specialised Frame classes to be created to describe each
+set of equivalent data value systems. For instance a hypothetical
+\emph{TemperatureFrame} could be created that encapsulates the meta-data
+needed to transform between different temperature scales (Celcius, Fahrenheit,
+Kelvin, \emph{etc}).
+
+Currently, provision of such specialised Frames within AST is
+limited, but this may change in future:
+
+\begin{description}
+
+\item[FluxFrame :] Supports 1-dimensional axes that represent the following
+astronomical flux systems:
+\begin{itemize}
+\item Flux per unit frequency ($W/m^2/Hz$)
+\item Flux per unit wavelength ($W/m^2/Angstrom$)
+\item Surface brightness in frequency units ($W/m^2/Hz/arcmin^2$)
+\item Surface brightness in wavelength units ($W/m^2/Angstrom/arcmin^2$)
+\end{itemize}
+Any dimensionally equivalent units can be used in place of the default
+units listed above. All flux values are assumed to be measured at the
+same frequency or wavelength (specified by an attribute of the FluxFrame).
+Thus this class is more appropriate for use with images than spectra.
+
+\item[Frame :] The basic Frame class can be used to represent
+single-system data value axes (\emph{i.e.} Frames that know only one
+system for specifying positions within its domain), using any suitable
+system of units. Such Frames can be used to convert axis values into any
+dimensionally equivalent set of units. For instance, a basic Frame used
+to represent stellar mass could be set to use Kg, Solar mass,
+\emph{etc.} as its units, and will automatically modify the associated
+Mappings each time the units are changed (assuming the Frame is part of
+a FrameSet).
+
+\end{description}
+
+
 \subsection{WCS handling}
 
 \subsubsection{Data Resampling and Regridding}
