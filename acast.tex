@@ -200,7 +200,7 @@ transformation recipes reflecting the coordinate transformations within
 an optical telescope, AST allows arbitrarily complex transformations to be
 constructed by combining simple atomic transformations in series or in
 parallel. This allows a much wider range of transformations to be
-described than is possible using FITS-WCS, and so can accomodate a wider
+described than is possible using FITS-WCS, and so can accommodate a wider
 range of data storage forms without the need to re-grid the data.
 
 AST was released internally in 1997 \cite[][included in ``Twenty Years of
@@ -209,7 +209,7 @@ continuous use within the Starlink Software Collection \citep[][\ascl{1110.012}]
 and is also used by various other major astronomical software tools such as
 DS9 \citep[][\ascl{0003.002}]{2003ASPC..295..489J}. Interest in flexible schemes for representing
 inter-related coordinate systems has increased recently\footnote{For
-instance, in the discussions about possible succesors to the FITS format \citep{2015Mink},
+instance, in the discussions about possible successors to the FITS format \citep{2015Mink},
 and within the Astropy project \citep{2013A&A...558A..33A}}, and so it seems an appropriate time to
 review the lessons learned from AST.
 
@@ -241,7 +241,7 @@ of the Starlink data format. An array giving the central wavelength at
 each pixel was stored as the \texttt{AXIS} component in the NDF data
 structure and did good service in spectroscopic applications. It was
 also possible, in a simple minded way, to attach an \texttt{AXIS}
-array to each dimension of an image or any gridded dataset of higher
+array to each dimension of an image or any gridded data set of higher
 dimensionality. This allowed each of its axes to be calibrated in
 terms of world coordinates.
 
@@ -253,7 +253,7 @@ and Declination), the axes are almost always inter-dependent. This is
 because the sky is essentially spherical and its coordinates are
 therefore naturally curvilinear when projected into two
 dimensions. This inter-dependence is a common feature of world
-cordinate systems in practice, so a solution was clearly needed that
+coordinate systems in practice, so a solution was clearly needed that
 addressed it properly.
 
 The Flexible Image Transport System
@@ -337,8 +337,8 @@ functions. Together with a method of passing named parameter values into
 these expressions, this greatly increased the set of functional forms
 that could be represented. The expressions themselves (encoded as
 character strings) and the associated parameter values could easily be
-stored in astronomical datasets. Typically, one set of expressions would
-relate pixel coordinates to world cordinates (e.g., sky coordinates) and
+stored in astronomical data sets. Typically, one set of expressions would
+relate pixel coordinates to world coordinates (e.g., sky coordinates) and
 a second, optional, set would define the inverse transformation. The
 expression syntax was powerful enough to represent a wide range of map
 projections plus many other transformations into alternative world
@@ -351,8 +351,8 @@ A library implementing this, called \textsc{transform}, was released
 in 1989 \citep{SUN61,1989StarB...4....7L}. It stored its data (the
 expressions and parameters) in Starlink's Hierarchical Data Format
 \citep[HDS;][]{SUN92,SSN27,2015HDS} and was thus able to integrate with the
-Starlink NDF data format to attach arbitrary world corrdinates to
-gridded astronomical datasets.
+Starlink NDF data format to attach arbitrary world coordinates to
+gridded astronomical data sets.
 
 
 \subsection{TRANSFORM Lessons}
@@ -378,7 +378,7 @@ initially unforeseen purposes which turned out to be very significant:
   arithmetic expressions (as an alternative to combining images using
   a manual sequence of add/subtract/multiply/divide and similar
   applications). This showed that (a) the approach could easily be
-  efficient enough to handle large datasets and (b) the data values in
+  efficient enough to handle large data sets and (b) the data values in
   an image were just another coordinate that could be transformed into
   different representations (logarithmic, different units, \emph{etc}.) in
   much the same way as its axes.
@@ -653,6 +653,7 @@ A selection of the more significant methods and properties of these
 three classes are described in appendix~\ref{app:classes}.
 
 \subsection{Transformations and Mappings}
+\label{sec:mappings}
 Within AST, most \emph{Mappings} encapsulates two transformations - one is
 designated as the \emph{forward} transformation and the other as the
 \emph{inverse} transformation. When a Mapping is used to transform a set
@@ -716,7 +717,7 @@ section~\ref{sec:cmpmap} for a more detailed explanation of some of these
 classes):
 
 \begin{description}
-\item[CmpMap:] Combines two encapculated Mappings in series or parallel.
+\item[CmpMap:] Combines two encapsulated Mappings in series or parallel.
 \item[SwitchMap:] Selects from a set of alternate Mappings depending on
 the location of each input position.
 \item[TranMap:] Use the forward transformations from one Mapping and the
@@ -725,7 +726,7 @@ inverse transformation from another.
 matrix of an encapsulated Mapping.
 \end{description}
 
-All classes of Mapping are immutable. That is, a Mappng cannot be changed
+All classes of Mapping are immutable. That is, a Mapping cannot be changed
 once it has been created. This is unlike Frame and FrameSet objects, which
 \emph{can} be changed.
 
@@ -768,7 +769,7 @@ used to transform the input position to generate the output position
 returned by the SwitchMap.
 
 There is a specialised subclass of Mapping, the SelectorMap class, that
-is designed specifically to fulfill the role of the selector Mapping
+is designed specifically to fulfil the role of the selector Mapping
 within a SwitchMap, but in principle \emph{any} suitable form of Mapping
 may be used. The SelectorMap class encapsulates several Regions (see
 section~\ref{sec:region}) and returns an output value that indicates
@@ -849,7 +850,7 @@ series or parallel) can be simplified. Since each class of Mapping has
 its own priorities about how to merge itself with its neighbours, it is
 possible for the simplification process to enter an infinite loop in
 which neighbouring Mappings disagree about the best way to simplify the
-Mapping list. When a particular Mapping is aked to merge with its
+Mapping list. When a particular Mapping is asked to merge with its
 neighbours, it may make changes to the Mapping list that are then undone
 when a neighbouring Mapping is asked to merge with its neighbours. The
 astSimplify method takes care to spot such loops and to assign priority
@@ -876,6 +877,7 @@ a particular coordinate system. Each Frame is associated with a specific
 Unlike Mappings, the properties of a Frame can be changed at any time.
 
 \subsubsection{What is a Domain?}
+\label{sec:domain}
 AST uses the word \emph{domain} to refer to a physical (or abstract)
 space such as ``time'', ``the sky'', ``the electro-magnetic spectrum'',
 ``the focal plane'', ``a pixel array''. Points within such a space can in
@@ -900,7 +902,7 @@ Galactic (l,b), it is possible to create a Mapping between them based on
 the mata-data stored within the two SkyFrames. This Mapping can then be
 used to convert (RA,Dec) positions into equivalent (l,b) positions, or
 vice-versa. The process of creating this Mapping is implemented within
-the \emph{Convert} method of the base Frame class. For instance, in
+the \emph{astConvert} method of the base Frame class. For instance, in
 Python:
 
 \begin{lstlisting}
@@ -932,9 +934,9 @@ specialised classes of Frames) in that it is not possible to include any
 knowledge about multiple coordinate systems given the arbitrary nature of
 the domain. The only exception to this is that the basic Frame class
 knows how to convert between different dimensionally equivalent units.
-Thus the implementation of the Convert method provided by the basic Frame
+Thus the implementation of the astConvert method provided by the basic Frame
 class can generate a Mapping between two basic Frames if they have the
-same domain name, the same number of axes, and the axes have dimesionally
+same domain name, the same number of axes, and the axes have dimensionally
 equivalent units.
 
 \subsubsection{Classes of Frame Provided by AST}
@@ -975,12 +977,12 @@ the domain names of the two component Frames. For instance if a CmpFrame
 contains a SkyFrame and a SpecFrame, then its domain name will be
 ``SKY-SPECTRUM''.
 
-As described above, each class of Frame provides a \emph{Convert} method
+As described above, each class of Frame provides a \emph{astConvert} method
 that determines if a Mapping can be created from an instance of the specific
 Frame class to any other Frame. In general, this will only be possible
 between instances of the same Frame class (i.e., Frames that represent
 alternative coordinates systems within the same physical domain).
-However, the implementation of the Convert method supplied by the
+However, the implementation of the astConvert method supplied by the
 CmpFrame class allows a Mapping to be created between a CmpFrame and
 either of the two component Frames. So for instance a CmpFrame describing
 the ``SKY-SPECTRUM'' domain could be matched with any of the following:
@@ -1001,7 +1003,7 @@ for the ``missing'' axes.}.
 So for instance, if a general purpose program reads the WCS from a data
 file of arbitrary dimensionality and wants to ask the question ``can I
 determine the ICRS (RA,Dec) of each pixel position?'' it can create a
-SkyFrame describing ICRS (RA,dec) and then use the Convert method to see
+SkyFrame describing ICRS (RA,dec) and then use the astConvert method to see
 if a Mapping can be created from the WCS Frame read from the data file to
 the \emph{template} SkyFrame describing the required coordinate system.
 This will allow ICRS (RA,Dec) to be determined for any 2-dimensional data
@@ -1024,15 +1026,15 @@ For instance, a FrameSet describing an image taken by a telescope may
 have three Frames describing pixel coordinates, focal plane coordinates
 and sky coordinates.
 
-The FrameSet class provides a method, \emph{GetMapping}, to return the
+The FrameSet class provides a method, \emph{astGetMapping}, to return the
 Mapping between any two nominated Frames. This may involve concatenating
 several Mappings if the two Frames are not directly connected to each
 other. For instance, if asked to returned the Mapping between Frame 1 and
-Frame 4 in Fig.~\ref{fig:complex-frameset}, the \emph{GetMapping} method
+Frame 4 in Fig.~\ref{fig:complex-frameset}, the \emph{astGetMapping} method
 will retrieve Mappings 1 and 3 from the FrameSet, and combine them in
 series into a single \emph{CmpMap} (compound Mapping).
 
-The FrameSet class also provides a method, \emph{GetFrame}, to
+The FrameSet class also provides a method, \emph{astGetFrame}, to
 return any nominated Frame from a FrameSet.
 
 New Frames can be added to an existing FrameSet at any point in the tree
@@ -1096,7 +1098,7 @@ done is to change the current Frame so that it describes, say, galactic
 coordinates rather than (RA,Dec). The Mapping is left unchanged and so will
 still generate (RA,Dec) values, even though the FrameSet now claims that
 these are galactic coordinates\footnote{Note, Mappings are immutable and so the
-integrity fo a FrameSet cannot be broken by making changes to a Mapping.}.
+integrity of a FrameSet cannot be broken by making changes to a Mapping.}.
 
 In order to retain the integrity of the FrameSet, the Mapping must
 be replaced with one that generates the appropriate galactic coordinate
@@ -1107,7 +1109,7 @@ follows, starting from the original unmodified FrameSet:
 \item Create a copy of the current Frame (i.e., the (RA,Dec) Frame), and
 change the attributes of the copy so that it describes Galactic
 coordinates.
-\item Use the \emph{Convert} method on the (RA,Dec) Frame to generate a
+\item Use the \emph{astConvert} method on the (RA,Dec) Frame to generate a
 Mapping from (RA,Dec) to galactic coordinates.
 \item Add the galactic coordinates Frame into the FrameSet, using the
 above Mapping to connect it to the existing (RA,Dec) Frame.
@@ -1123,7 +1125,7 @@ the FrameSet class itself provides generalised ``integrity restoration''
 along the same lines, meaning that client code is relieved of the
 responsibility. Whenever any change is made to the current Frame within a
 FrameSet, the FrameSet class first takes a copy of the original Frame and
-makes the requested change to the copy. It then uses the \emph{Convert}
+makes the requested change to the copy. It then uses the \emph{astConvert}
 method to generate a Mapping from the old Frame to the modified copy. It
 then adds the modified copy into the FrameSet, using the Mapping returned
 by \emph{Convert} to connect it the original unmodified Frame. It finally
@@ -1139,22 +1141,22 @@ instance, if a mistake is made when setting the properties of a Frame
 prior to adding it into a FrameSet, then it should be possible to correct
 those mistakes without causing changes to be made to the Mappings within
 the FrameSet. This is possible by first getting a reference to the Frame
-using the FrameSet's \emph{GetFrame} method, and then changing the Frame
+using the FrameSet's \emph{astGetFrame} method, and then changing the Frame
 properties using that Frame reference, rather than the original FrameSet
 reference. Integrity restoration only occurs when the current Frame properties
 are changed via a FrameSet reference.
 
 \subsubsection{Searching a FrameSet for a Frame with Required Properties}
-As described earlier, the \emph{Convert} method defined by the Frame
+As described earlier, the \emph{astConvert} method defined by the Frame
 class attempts to find a Mapping between two arbitrary
 Frames\footnote{This may or may not be possible depending on the nature
 of the two Frames.}. Since the FrameSet class inherits the methods of the
-Frame class, the \emph{Convert} method can also be used on FrameSets. In
-this case the \emph{Convert} method will search through all the Frames
+Frame class, the \emph{astConvert} method can also be used on FrameSets. In
+this case the \emph{astConvert} method will search through all the Frames
 in the FrameSet, starting with the current Frame, until a Frame is found
 for which a Mapping can be created. Since, in general, the Frames within a
 FrameSet all describe different domains, it is unlikely that more than one
-Frame will generate a Mapping, but the serach order can be controlled by
+Frame will generate a Mapping, but the search order can be controlled by
 the caller in order to assign priority to specific Frames.
 
 This allows code to search a FrameSet for a Frame that has specific
@@ -1433,7 +1435,7 @@ represents 3-dimensional ``user'' coordinates.
 
 The projection from 3-dimensional graphics coordinates onto a
 2-dimensional plotting surface is handled by the underlying graphics
-package. This may be suprising, given that AST could itself handle this
+package. This may be surprising, given that AST could itself handle this
 sort of projection. But the decision was taken so that Plot3D graphics
 wrapper functions could use the full range of features offered by a
 dedicated 3-dimensional plotting packages, rather than restrict it to the
@@ -1473,7 +1475,7 @@ throughout AST is equally applicable to the problem of describing data
 requires a set of specialised Frame classes to be created to describe each
 set of equivalent data value systems. For instance a hypothetical
 \emph{TemperatureFrame} could be created that encapsulates the meta-data
-needed to transform between different temperature scales (Celcius, Fahrenheit,
+needed to transform between different temperature scales (Celsius, Fahrenheit,
 Kelvin, \emph{etc}).
 
 Currently, provision of such specialised Frames within AST is
@@ -1507,15 +1509,137 @@ a FrameSet).
 \end{description}
 
 
-\subsection{WCS handling}
+\subsection{WCS Handling}
+The most common reason for using AST is to allow the position of one or
+more data values to be described in a range of possible coordinate
+systems. For this purpose, a serialised FrameSet is often stored with the
+data on the assumption that the ``natural coordinate system'' of the data
+structure corresponds to a known Frame (usually the base Frame) in the
+FrameSet. The most common data structure is an N-dimensional regular grid
+of values, in which case the base Frame in the FrameSet is assumed to describe
+``pixel coordinates'' within the grid (generalising the term ``pixel'' to
+data of any dimensionality). Different systems exist for enumerating the
+pixels within an array - for instance, some start counting at zero and
+some at one. AST allows multiple pixel coordinate systems to be described
+and used within a single FrameSet, assuming that the Mappings between
+such Frames have been set up and incorporated into the FrameSet correctly.
 
-\subsubsection{Data Resampling and Regridding}
+The following sections describe just a few of the more common WCS
+operations that may be achieved using AST:
+
+\subsubsection{Validating WCS}
+The generalised description of WCS provided by AST makes it more possible
+to write applications in a domain-agnostic manner. For instance, an
+application that uses WCS to align two data sets need not know whether the
+data sets are two-dimensional images of the sky, one dimensional spectra,
+3-dimensional time-space cubes, \emph{etc}. However, this will not always
+be possible, and it will still often be the case that an applications needs
+to check that the WCS in the supplied data is consistent with the
+specific requirements of the application. The ``astFindFrame'' method can
+often be used for this purpose. The application creates a Frame that acts
+as a template for the coordinate systems required by the application,
+and passes this Frame, together with the WCS FrameSet read from the data,
+to the astFindFrame method, which then searches the FrameSet looking for
+a Frame that can be matched against the template. If such a Frame is
+found, information about the specific Frame found is returned, together
+with a Mapping that connects that Frame to one of the Frames in the WCS
+FrameSet.
+
+As a trivial example, consider an application that requires 1-dimensional
+data but does not care what that one dimension represents, it creates a
+1-dimensional basic Frame to act as a template, leaving all Frame
+attributes at their default values in the template (default values act as
+wild-cards during the searching process). The application then passes
+this template Frame, together with the WCS FrameSet read from the data
+file, to astFindFrame. Each Frame in the WCS FrameSet is then compared to
+the template to see if a match is possible. In this case, a basic Frame
+with no set attributes will match any 1-dimensional Frame of any form,
+but will not match Frames with more than one dimension.
+
+A specialised application for processing spectral data cubes may use for
+its template a 3-dimensional CmpFrame (compound Frame) containing a
+2-dimensional SkyFrame (celestial longitude/latitude axes) and
+1-dimensional SpecFrame (a spectral axis). The astFindFrame will then
+only match 3-dimensional Frames with similar properties. Note, if the
+System attribute is set to specific values in the SkyFrame and/or
+SpecFrame contained within the template, then the Mapping returned by
+astFindFrame will include the transformations needed to convert from the
+system of the matching Frame to that of the template Frame. So for
+instance, if the template axes are $(RA,Dec,Wavelength)$ and the WCS
+FrameSet contains a CmpFrame with $(Frequency,GalacticLongitude,
+GalacticLatitude)$ axes, the Mapping returned by astFindFrame will include an
+axis permutation, and the transformations needed to convert from frequency
+to wavelength, and from Galactic coordinates to $(RA,Dec)$.
+
+In other words, astFindFrame provides arbitration between the WCS
+requirements of the application, and the WCS information that is available
+in the supplied data set, returning a null result if the requirements of
+the application are not met by the data set.
+
+\subsubsection{Merging WCS information}
+
+If a data processing operation involves combining two or more data sets
+in some way, it will usually be necessary to form a connection between
+the WCS in the two data sets, so that corresponding data values in each
+data set can be identified\footnote{Possibly the most common example is
+co-adding several images into a single mosaic.}. This is accomplished in
+a completely general way within AST using the astConvert method
+described in section~\ref{sec:domain}, which searches two FrameSets
+looking for a pair of Frames that can be connected together using some
+known Mapping.
+
+\subsubsection{Modifying WCS Information}
+
+If an application creates an output data array by applying some geometrical
+transformation to an input data array, it should also store appropriately
+modified WCS in the output. The concatenation and simplification of
+Mappings described in section~\ref{sec:mappings} makes this easy. The
+application should create a Mapping that describes the geometric
+transformation that has been applied to the pixel array, and then
+``re-map'' the pixel Frame within the WCS FrameSet read from the input
+data set. The resulting modified FrameSet should be stored in the output
+data set. Re-mapping a Frame within a FrameSet means appending the
+supplied Mapping to the existing Mapping that connects the Frame with its
+parent in the FrameSet. The astRemapFrame method is provided to do this.
+It also simplifies the resulting compound Mapping if possible.
+
+For instance, if an application rotates an input image to create an
+output image, the application should create a 2-dimensional MatrixMap to
+describe the rotation\footnote{A pair of ShiftMaps will also be needed if
+the rotation is not around the pixel origin.} and then invoke
+astRemapFrame, supplying the MatrixMap and the WCS FrameSet from the
+input image. The modified FrameSet would then be stored in the output
+image.
+
+\subsubsection{Using WCS for Data Resampling and Regridding}
+The previous section described how to modify the WCS to take account of a
+geometric transformation of a data set, assuming a Mapping describing the
+transformation is available. If such a Mapping is available, it can also
+be used to perform the actual resampling or regridding of the pixel
+values themselves. AST provides several methods that will perform such
+resampling or regridding, using any of a wide range of alternative
+sampling kernels. Alternatively, an externally defined sampling kernel
+can be used.
+
+The benefit of using these methods within AST rather than simply
+transforming every pixel position within the application code, is that
+the AST methods attempt to speed up the operation by using linear
+approximations to the supplied transformation if possible. Data sets are
+constantly increasing in size, and transforming every pixel position
+within a large data set using a long and complicated transformation can
+be an expensive operation. The AST methods divide the input data set in
+half along each axis, and find a linear approximation to the Mapping
+over each resulting quadrant. If one of these approximations meets a
+user-specified accuracy, the approximation is used to transform all pixel positions
+within its quadrant. Any quadrants that do not meet the accuracy
+requirements are subdivided again and new approximations are found
+for each of the new sub-quadrants. This process repeats recursively until
+the sub-quadrants become so small that there is likely to be little
+time-saving in sub-dividing them any further. At this point the full
+transformation is used on all pixels within any such sub-quadrants.
 
 
-
-
-
-\section{Things we Would do Differently now}
+\section{Things we Would do Differently Now}
 
 \begin{enumerate}
 
@@ -1556,7 +1680,7 @@ The AST library has been developed over a number of years
 
 This work was funded by the Council for the Central Laboratory of the
 Research Councils and subsequently by the Science and Technology
-Facilties Council.  The AST library and the related Starlink software
+Facilities Council.  The AST library and the related Starlink software
 are currently maintained by the East Asian Observatory, Hawaii. The
 source code for the AST library is open-source using the Lesser Gnu
 Public License and is available
