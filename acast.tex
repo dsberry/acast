@@ -1274,6 +1274,76 @@ positions to see if they are within the rectangular area of pixel
 coordinates described by the Box.
 
 \section{Serialisation, and FITS-WCS}
+AST includes a set of \emph{channel} classes, which allow AST objects to
+be serialised in various ways. The astWrite method of the basic astChannel
+class converts a in-memory AST object into a set of text strings. By default
+these text strings are simply written to standard output, but an external
+``sink'' function can be supplied to the astChannel constructor which --- if
+supplied --- will be called by the astChannel class to store each text
+string in some associated external store. The astRead method of the
+astChannel class does the inverse --- it calls a supplied ``source''
+function to read a set of text strings from an external store, and then
+creates an in-memory AST object from the text strings. A round-trip
+(astWrite followed by astRead) is lossless. The textual descriptions of
+AST objects produced by the astChannel class use a bespoke block structured
+format specific to AST.
+
+Within the Python interface, the \emph{print} function uses an astChannel
+to produce a listing of the given AST object. As an example, the
+following Python code:
+
+\begin{lstlisting}
+   map1 = starlink.Ast.PermMap( [3,1],
+                             [2,-1,1], 12.2 )
+   map2 = starlink.Ast.ZoomMap( 3, 4.0 )
+   cmpmap = starlink.Ast.CmpMap( map1, map2 )
+   print( cmpmap )
+\end{lstlisting}
+
+produces the following output from astChannel:
+
+\footnotesize
+\begin{verbatim}
+ Begin CmpMap   # Compound Mapping
+    Nin = 2     # Number of input coordinates
+    Nout = 3    # Number of output coordinates
+ IsA Mapping    # Mapping between coordinate systems
+    MapA =      # First component Mapping
+       Begin PermMap    # Coordinate permutation
+          Nin = 2       # Number of input coordinates
+          Nout = 3      # Number of output coordinates
+       IsA Mapping      # Mapping between coordinate systems
+          Out1 = 2      # Output coordinate 1 = input coordinate 2
+          Out2 = -1     # Output coordinate 2 = constant no. 1
+          Out3 = 1      # Output coordinate 3 = input coordinate 1
+          In1 = 3       # Input coordinate 1 = output coordinate 3
+          In2 = 1       # Input coordinate 2 = output coordinate 1
+          Nconst = 1    # Number of constants
+          Con1 = 12.2   # Constant number 1
+       End PermMap
+    MapB =      # Second component Mapping
+       Begin ZoomMap    # Zoom about the origin
+          Nin = 3       # Number of input coordinates
+       IsA Mapping      # Mapping between coordinate systems
+          Zoom = 4      # Zoom factor
+       End ZoomMap
+ End CmpMap
+\end{verbatim}
+\normalsize
+
+Attributes of the astChannel class can be used to enable or disable
+inclusion of comments, indentation, defaulted values, \emph{etc}.
+
+
+
+
+
+
+
+
+
+
+
 
 \section{Fields of Application}
 This section describes some of the ways in which AST can be used.
