@@ -461,7 +461,7 @@ final world coordinate system.
 In view of the decision to stay with this rigid and restrictive model,
 and in view of expected length of time needed to agree a new standard\footnote{An
 expectation that was justified when the standard was finally published in 2002.},
-the Starlink project decided in early 1996 to develope its own WCS system, informed
+the Starlink project decided in early 1996 to develop its own WCS system, informed
 by the earlier experiments with \textsc{transform}, rather than adopt the new FITS
 standard.
 
@@ -695,7 +695,7 @@ The most significant atomic Mapping classes are:
 \item[ShiftMap:] Translate positions by adding an offset to each axis.
 \item[MatrixMap:] Transform positions using a matrix.
 \item[PolyMap:] A general N-dimensional polynomial transformation.
-\item[PermMap:] Transform positions by permutating and selecting axes.
+\item[PermMap:] Transform positions by permuting and selecting axes.
 \item[LutMap:] Transform 1-dimensional coordinates using a look-up table.
 \item[MathMap:] Transform coordinates using general algebraic mathematical expressions.
 \item[WcsMap:] Implements a wide range of spherical projections.
@@ -744,7 +744,7 @@ transformed by the second component Mapping. Consequently, the output
 dimensionality of the first Mapping must be the same as the input
 dimensionality of the second Mapping.
 
-In a \emph{parallel} CmpMap, the input space is split into two subspaces.
+In a \emph{parallel} CmpMap, the input space is split into two sub-spaces.
 The first component Mapping is used to transform the axis values
 corresponding to the first subspace, and the second component Mapping is
 used to transform the axis values corresponding to the second subspace.
@@ -899,7 +899,7 @@ items being the epoch of observation, and the reference
 equinox\footnote{The base Frame class includes the observer's geodetic
 position.}. Thus given two SkyFrames describing, say, FK5 (RA,Dec) and
 Galactic (l,b), it is possible to create a Mapping between them based on
-the mata-data stored within the two SkyFrames. This Mapping can then be
+the meta-data stored within the two SkyFrames. This Mapping can then be
 used to convert (RA,Dec) positions into equivalent (l,b) positions, or
 vice-versa. The process of creating this Mapping is implemented within
 the \emph{astConvert} method of the base Frame class. For instance, in
@@ -1275,20 +1275,20 @@ coordinates described by the Box.
 
 \section{Serialisation, and FITS-WCS}
 AST includes a set of \emph{channel} classes, which allow AST objects to
-be serialised in various ways. The astWrite method of the basic astChannel
+be serialised in various ways. The astWrite method of the basic Channel
 class converts a in-memory AST object into a set of text strings. By default
 these text strings are simply written to standard output, but an external
-``sink'' function can be supplied to the astChannel constructor which --- if
-supplied --- will be called by the astChannel class to store each text
+``sink'' function can be supplied to the Channel constructor which --- if
+supplied --- will be called by the Channel class to store each text
 string in some associated external store. The astRead method of the
-astChannel class does the inverse --- it calls a supplied ``source''
+Channel class does the inverse --- it calls a supplied ``source''
 function to read a set of text strings from an external store, and then
 creates an in-memory AST object from the text strings. A round-trip
 (astWrite followed by astRead) is lossless. The textual descriptions of
-AST objects produced by the astChannel class use a bespoke block structured
+AST objects produced by the Channel class use a bespoke block structured
 format specific to AST.
 
-Within the Python interface, the \emph{print} function uses an astChannel
+Within the Python interface, the \emph{print} function uses a Channel
 to produce a listing of the given AST object. As an example, the
 following Python code:
 
@@ -1300,7 +1300,7 @@ following Python code:
    print( cmpmap )
 \end{lstlisting}
 
-produces the following output from astChannel:
+produces the following output:
 
 \footnotesize
 \begin{verbatim}
@@ -1331,19 +1331,34 @@ produces the following output from astChannel:
 \end{verbatim}
 \normalsize
 
-Attributes of the astChannel class can be used to enable or disable
+Attributes of the Channel class can be used to enable or disable
 inclusion of comments, indentation, defaulted values, \emph{etc}.
 
+Sub-classes of Channel are provided that can encode this lossless
+block-structured object description into an XML format (the XmlChan
+class), or into a set of FITS header cards (the FitsChan class).
 
+\subsection{Foreign Encodings}
 
+In addition to the ``native'' block-structured object description
+outlined in the previous section, AST can also read and write objects
+using several externally defined ``foreign'' encodings. The FitsChan
+class provides facilities for reading and writing WCS information from
+FITS files using several different encoding schemes, including standard
+FITS-WCS \citep[FITS;][]{1995ASPC...77..233G}. The StcsChan
+class can read and write space-time metadata from a subset of the
+``STC-S'' scheme developed by the IVOA \citep{STC}.
 
-
-
-
-
-
-
-
+These processes are in general not lossless. The degree to which
+information is lost in transforming between AST and the external format
+depends on how closely the external data model matches that used by AST.
+The FitsChan class currently provides support for almost all of papers I,
+II and III in the FITS-WCS series \citep{FITSWCSI,FITSWCSII,FITSWCSIII}
+\footnote{Support for the tabular format associated with the ``-TAB'' code
+described in FITS-WCS paper III is limited to 1-dimensional(\emph{i.e.}
+separable) axes.}. As yet it does not provide support for converting
+between the AST TimeFrame class and the FITS-WCS description of time
+axes \citep{FITSWCSIV}.
 
 \section{Fields of Application}
 This section describes some of the ways in which AST can be used.
