@@ -1225,7 +1225,7 @@ then extract the coordinates from the transformed PointList. Doing so can
 potentially introduces large overheads that can increase the overall time
 taken to do the transformation.
 
-Other subclasses of Region exist to describe circles, ellipses, boxes
+Other sub-classes of Region exist to describe circles, ellipses, boxes
 polygons, \emph{etc}. For instance, a Circle encapsulates two positions
 within a Frame - one being the centre of the required circle and the
 other being a point on its perimeter. A Polygon is similar to a PointList
@@ -1728,26 +1728,44 @@ transformation is used on all pixels within any such sub-quadrants.
 
 \begin{enumerate}
 
-\item Be clearer about the distinction between a coordinate system and
-  a domain. Coordinate systems are mathematical abstractions of
-  various types (Cartesian, polar, \emph{etc}). You use a coordinate system
-  to describe a position within a physical space (domain). In this
-  sense a domain can encapsulate several alternative coordinate
-  systems, any of which can be used to describe positions in the
-  domain.
+\item There was no C++ standard in 1996 when AST development commenced.
+So for portability reasons we chose to write AST in ANSI C, developing
+our own infrastructure to support object-orientation. Things are
+different now --- C++ is much more mature with greater standardisation.
+For that reason we would choose C++ over C if starting AST development
+now\footnote{Writing in higher level languages such as Java or Python would make
+it more difficult to write interfaces for other languages.}.
 
-\item Have a specific sub-class of Frame to describe a pixel array ( a
-  PixelFrame), allowing System=GRID or System=PIXEL.
+\item The current architecture of AST makes it difficult for non-Starlink
+developers to create optional extensions or plug-ins to AST that provide added
+value. This was seen initially as a positive feature that would
+encourage standardisation, and avoid proliferation of multiple incompatible
+versions of AST object format. However, with hind sight the monolithic
+nature of the library has turned out to be a barrier to wider adoption.
+Potential users often want to use only some small part of AST's wide
+functionality, and feel daunted by a large library and a fat document
+covering many things that are irrelevant to them. Also, the custom infra-structure
+used for object orientation within AST is often seen as hard to learn.
+Some simple and well documented means for an external library to use this
+infrastructure would have been useful.
 
-\item Use degrees instead of radians for sky axes.
+\item The restriction that all coordinate values are represented by
+double precision values may be a problem for time axes, which can
+sometimes require quad precision.
 
-\item The restriction that Mappings can only transform doubles may be
-  a problem for time axes (but this is an issue with the
-  implementation rather than the model).
+\item The distinction between a coordinate system and a domain has caused
+confusion and misunderstandings on several occasions. Coordinate systems are
+mathematical abstractions of various types (Cartesian, polar, \emph{etc}).
+Coordinate system are used to describe positions within a physical space
+(\emph{i.e.} a domain). In this sense a domain can encapsulate several
+alternative coordinate systems, any of which can be used to describe positions
+in the domain. With hind-sight, it may have been useful to make this
+distinction clearer by separating coordinate systems and domains into
+different classes.
 
-\item Make it more modular. Some sort of facility for optional
-  extensions or plug-ins, so that the thing does not become such a
-  huge monolithic lump.
+\item Out decision to use radians rather than degrees to represent angle values
+has proved unpopular.
+
 
 \end{enumerate}
 
