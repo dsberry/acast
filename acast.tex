@@ -1726,9 +1726,9 @@ transformation is used on all pixels within any such sub-quadrants.
 
 \section{Things we Would do Differently Now}
 
-\begin{enumerate}
+\subsection{Language Choice}
 
-\item There was no C++ standard in 1996 when AST development commenced.
+There was no C++ standard in 1996 when AST development commenced.
 So for portability reasons we chose to write AST in ANSI C, developing
 our own infrastructure to support object-orientation. Things are
 different now --- C++ is much more mature with greater standardisation.
@@ -1736,7 +1736,9 @@ For that reason we would choose C++ over C if starting AST development
 now\footnote{Writing in higher level languages such as Java or Python would make
 it more difficult to write interfaces for other languages.}.
 
-\item The current architecture of AST makes it difficult for non-Starlink
+\subsection{Architecture}
+
+The current architecture of AST makes it difficult for non-Starlink
 developers to create optional extensions or plug-ins to AST that provide added
 value. This was seen initially as a positive feature that would
 encourage standardisation, and avoid proliferation of multiple incompatible
@@ -1749,11 +1751,15 @@ used for object orientation within AST is often seen as hard to learn.
 Some simple and well documented means for an external library to use this
 infrastructure would have been useful.
 
-\item The restriction that all coordinate values are represented by
+\subsection{Floating-point precision}
+
+The restriction that all coordinate values are represented by
 double precision values may be a problem for time axes, which can
 sometimes require quad precision.
 
-\item The distinction between a coordinate system and a domain has caused
+\subsection{Coordinate systems versus Domains}
+
+The distinction between a coordinate system and a domain has caused
 confusion and misunderstandings on several occasions. Coordinate systems are
 mathematical abstractions of various types (Cartesian, polar, \emph{etc}).
 Coordinate system are used to describe positions within a physical space
@@ -1763,11 +1769,10 @@ in the domain. With hind-sight, it may have been useful to make this
 distinction clearer by separating coordinate systems and domains into
 different classes.
 
-\item Out decision to use radians rather than degrees to represent angle values
+\subsection{Angle units}
+
+Our decision to use radians rather than degrees to represent angle values
 has proved unpopular.
-
-
-\end{enumerate}
 
 \section{The AST library}
 
