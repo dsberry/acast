@@ -147,7 +147,14 @@
 
 
 \begin{abstract}
-This paper describes the Starlink AST library.
+In view of increased interest in object-oriented systems for describing
+coordinate information, we present a description of the data model used
+by the Starlink AST library. AST provides a comprehensive range of
+facilities for attaching world co-ordinate systems to astronomical data,
+for retrieving and interpreting that information in a variety of
+formats, including FITS-WCS. AST is a mature system that has been in use
+for more than 20 years, and may consequently be useful as a means of
+informing development of similar systems in the future.
 \end{abstract}
 
 \begin{keyword}
@@ -198,8 +205,8 @@ different coordinate systems.
 Unlike FITS-WCS, which supports only a relatively small set of prescribed
 transformation recipes reflecting the coordinate transformations within
 an optical telescope, AST allows arbitrarily complex transformations to be
-constructed by combining simple atomic transformations in series or in
-parallel. This allows a much wider range of transformations to be
+constructed by combining simple atomic transformations. This allows a much
+wider range of transformations to be
 described than is possible using FITS-WCS, and so can accommodate a wider
 range of data storage forms without the need to re-grid the data.
 
@@ -230,7 +237,7 @@ data \citep{2015Jenness}. There was clearly a need to relate positions
 within gridded data, using coordinates based on pixel indices, to
 real-world positions on the sky, wavelengths in a spectrum and so
 on. These non-pixel coordinate systems are now generally known as
-world coordinate systems (WCS).
+world coordinate systems.
 
 Calibration of spectra, for example, was commonly performed by fitting
 a polynomial to express wavelength as a function of pixel position and
@@ -450,7 +457,7 @@ on a new standard for storing WCS information within FITS files. However,
 in view of the ``once FITS, always FITS'' principle, that work consisted
 mainly in formalising and extending existing practices. So for instance, new
 keywords were defined to store the extra meta-data needed for a complete
-description of a celestial coordinates system, and new projection types were
+description of a celestial coordinate system, and new projection types were
 added, but the basic model remained unchanged. The new standard still required
 that the transformation be split into three components applied in series; an
 affine transformation that converts pixel coordinates into \emph{intermediate
@@ -459,7 +466,7 @@ spherical coordinates}, and a spherical rotation that converts these into the
 final world coordinate system.
 
 In view of the decision to stay with this rigid and restrictive model,
-and in view of expected length of time needed to agree a new standard\footnote{An
+and the expected length of time needed to agree a new standard\footnote{An
 expectation that was justified when the standard was finally published in 2002.},
 the Starlink project decided in early 1996 to develop its own WCS system, informed
 by the earlier experiments with \textsc{transform}, rather than adopt the new FITS
@@ -491,7 +498,9 @@ simple implementations that users could re-write if necessary.
 Deciding to write an OO system in a non-OO language took considerable
 thought. We needed to provide a Fortran-callable interface but, at the
 time, the portability of C++ code was quite limited if one needed to
-call it from Fortran, so that route was unattractive. Eventually, we
+call it from Fortran, so that route was unattractive\footnote{Further, there
+was no offical C++ standard available at the time - the first international
+standard for C++ (ISO/IEC 14882:1998) was published in 1998.}. Eventually, we
 were guided by the approach described by \citet{1992Holub} for
 handling objects in C and were able to hide the detail from users
 using pre-processor macros.
@@ -594,8 +603,8 @@ system to another.
 \item knowing \emph{what} those coordinate systems represent.
 \end{enumerate}
 
-As an example of how this distinction is applied in practice, the
-\emph{pixel size} of a typical 2-dimensional image of the sky is
+As an example of the practical consequences of this distinction,
+the \emph{pixel size} of a typical 2-dimensional image of the sky is
 \emph{not} considered to be a property of the (RA,Dec) Frame, since it is
 determined by the nature of the transformation from pixel coordinates to
 (RA,Dec) coordinates, rather than being an intrinsic property of the (RA,Dec)
@@ -612,7 +621,7 @@ easy to create complex compound objects from simple component objects.
 For instance, multiple Mappings can be combined into a new object, and
 the resulting object will itself be a Mapping. Likewise, multiple Frames
 can be combined into a new object, and the resulting object will itself be
-a Frame\footnote{For instance, an 2-dimensional (RA,Dec) Frame can be
+a Frame\footnote{For instance, a 2-dimensional (RA,Dec) Frame can be
 combined with a 1-dimensional wavelength Frame to create a 3-dimensional
 (RA,Dec,Wavelength) Frame.}.
 
@@ -649,12 +658,9 @@ and the transformations between them. }
 \label{fig:complex-frameset}
 \end{figure}
 
-A selection of the more significant methods and properties of these
-three classes are described in appendix~\ref{app:classes}.
-
 \subsection{Transformations and Mappings}
 \label{sec:mappings}
-Within AST, most \emph{Mappings} encapsulates two transformations - one is
+Within AST, most \emph{Mappings} encapsulate two transformations - one is
 designated as the \emph{forward} transformation and the other as the
 \emph{inverse} transformation. When a Mapping is used to transform a set
 of positions, the caller must indicate if the forward or inverse
@@ -668,7 +674,7 @@ results in the two transformations being swapped.
 For most classes of Mapping, the inverse transformation is a genuine
 mathematical inverse of the forward transformation. However, this is not
 an absolute requirement, and there are a few classes of Mapping where
-this is not the case (for instance the \emph{PermMap} class, in which the
+this is not the case (for instance the \emph{PermMap} class, when the
 axes of the output space are a permuted subset of the axes of the input
 space). In addition, the Mapping class does not require that \emph{both}
 transformations are defined. For instance, the \emph{MatrixMap} class, which
@@ -691,22 +697,22 @@ The most significant atomic Mapping classes are:
 \begin{description}
 \item[UnitMap:] Copy positions from input to output without any change.
 \item[WinMap:] Transform positions by scaling and shifting each axis.
-\item[ZoomMap:] Transform positions by zoom all axes about the origin.
+\item[ZoomMap:] Transform positions by zooming all axes about the origin.
 \item[ShiftMap:] Translate positions by adding an offset to each axis.
-\item[MatrixMap:] Transform positions using a matrix.
+\item[MatrixMap:] Transform position vectors by multiplying by a matrix.
 \item[PolyMap:] A general N-dimensional polynomial transformation.
 \item[PermMap:] Transform positions by permuting and selecting axes.
 \item[LutMap:] Transform 1-dimensional coordinates using a look-up table.
 \item[MathMap:] Transform coordinates using general algebraic mathematical expressions.
 \item[WcsMap:] Implements a wide range of spherical projections.
-\item[SlaMap:] Transforms positions between various celestial coordinate systems.
+\item[SlaMap:] Transform positions between various celestial coordinate systems.
 \item[SpecMap:] Transforms positions between various spectral coordinate systems.
 \item[SphMap:] Map 3-d Cartesian to 2-d spherical coordinates.
-\item[TimeMap:] Transforms positions between various time coordinate systems.
+\item[TimeMap:] Transform positions between various time coordinate systems.
 \item[PcdMap:] Apply 2-dimensional pincushion/barrel distortion.
-\item[DssMap:] Map points using Digitised Sky Survey plate solution.
+\item[DssMap:] Transform positions using Digitised Sky Survey plate solutions.
 \item[GrismMap:] Models the spectral dispersion produced by a grism.
-\item[IntraMap:] Map points using an externally supplied transformation function.
+\item[IntraMap:] Transform positions using an externally supplied transformation function.
 \item[SelectorMap:] Locates positions within a set of Regions (see
 section~\ref{sec:cmpmap}).
 
@@ -808,16 +814,16 @@ a problem because it leads to:
 \item more room being needed to store the total transformation.
 \end{enumerate}
 
-To avoid this, the Mapping class provides a ``astSimplify'' method that
-takes a potentially complex Mapping and simplifies it as far as possible.
-Doing such simplification in a general and effective manner is one of the
-most difficult challenges faced by the AST model, but experience has shown
-that the current scheme implemented in AST handles most cases sufficiently
-well. The steps involved in simplification depend on the nature of the
-component Mappings in the total CmpMap. Each class of Mapping provides its
-own rules that indicate when and how it can be simplified, or combined
-with an adjacent Mapping in the chain. To illustrate the principle,
-some of the simplest examples include,
+To avoid this, the Mapping class provides a method that takes a
+potentially complex Mapping and simplifies it as far as possible. Doing
+such simplification in a general and effective manner is one of the most
+difficult challenges faced by the AST model, but experience has shown
+that the current scheme implemented in AST handles most cases
+sufficiently well. The steps involved in simplification depend on the
+nature of the component Mappings in the total CmpMap. Each class of
+Mapping provides its own rules that indicate when and how it can be
+simplified, or combined with an adjacent Mapping in the chain. To
+illustrate the principle, some of the simplest examples include,
 
 \begin{enumerate}
 \item any Mapping can be combined with its own inverse to create a UnitMap,
@@ -831,19 +837,18 @@ quadrants with zeros).
 (either in series or in parallel).
 \end{enumerate}
 
-The whole simplification process is managed by the implementation of the
-astSimplify method provided by the CmpMap class. It expands the compound
-Mapping into a list of atomic Mappings to be applied in series or
-parallel, and then for each Mapping in the list, invokes that Mapping’s
-protected ``astMapMerge'' method. This method is supplied with the entire
-list of atomic Mappings, and determines if the nominated Mapping can be
-merged with any of its neighbours. If so, a new list of Mappings is
-returned containing the merged Mapping in place of the original mappings.
-Once all atomic Mappings in the CmpMap have been checked in this way, the
-same process is repeated again from the beginning in case any of the
-changes that have been made to the list allow further simplifications to
-be performed. This process is repeated until no further simplifications
-occur.
+The whole simplification process is managed by the CmpMap class - it
+expands the compound Mapping into a list of atomic Mappings to be applied
+in series or parallel, and then for each Mapping in the list, invokes
+that Mapping's protected \texttt{astMapMerge} method. This method is
+supplied with the entire list of atomic Mappings, and determines if the
+nominated Mapping can be merged with any of its neighbours. If so, a new
+list of Mappings is returned containing the merged Mapping in place of
+the original mappings. Once all atomic Mappings in the CmpMap have been
+checked in this way, the same process is repeated again from the
+beginning in case any of the changes that have been made to the list
+allow further simplifications to be performed. This process is repeated
+until no further simplifications occur.
 
 There are in general multiple ways in which a list of Mappings (either
 series or parallel) can be simplified. Since each class of Mapping has
@@ -853,7 +858,7 @@ which neighbouring Mappings disagree about the best way to simplify the
 Mapping list. When a particular Mapping is asked to merge with its
 neighbours, it may make changes to the Mapping list that are then undone
 when a neighbouring Mapping is asked to merge with its neighbours. The
-astSimplify method takes care to spot such loops and to assign priority
+simplification method takes care to spot such loops and to assign priority
 to one or the other of the conflicting Mappings.
 
 \subsubsection{Missing or Bad Axis Values}
@@ -886,7 +891,7 @@ instance, any position on the sky can be described using ICRS
 coordinates, Galactic coordinates, \emph{etc}. Similarly, positions in
 the eletro-magnetic spectrum can be described using frequency,
 wavelength, velocity, \emph{etc}). Each subclass of Frame represents a
-specific domain, and in general will encapsulate all the metadata needed
+specific domain, and in general will encapsulate all the meta-data needed
 to create a Mapping between any pair of supported coordinate systems
 within its domain\footnote{In retrospect, the Frame
 class should probably have been named \emph{Domain} rather than
@@ -902,7 +907,7 @@ Galactic (l,b), it is possible to create a Mapping between them based on
 the meta-data stored within the two SkyFrames. This Mapping can then be
 used to convert (RA,Dec) positions into equivalent (l,b) positions, or
 vice-versa. The process of creating this Mapping is implemented within
-the \emph{astConvert} method of the base Frame class. For instance, in
+the \texttt{astConvert} method of the base Frame class. For instance, in
 Python:
 
 \begin{lstlisting}
@@ -934,7 +939,7 @@ specialised classes of Frames) in that it is not possible to include any
 knowledge about multiple coordinate systems given the arbitrary nature of
 the domain. The only exception to this is that the basic Frame class
 knows how to convert between different dimensionally equivalent units.
-Thus the implementation of the astConvert method provided by the basic Frame
+Thus the implementation of the \texttt{astConvert} method provided by the basic Frame
 class can generate a Mapping between two basic Frames if they have the
 same domain name, the same number of axes, and the axes have dimensionally
 equivalent units.
@@ -977,12 +982,12 @@ the domain names of the two component Frames. For instance if a CmpFrame
 contains a SkyFrame and a SpecFrame, then its domain name will be
 ``SKY-SPECTRUM''.
 
-As described above, each class of Frame provides a \emph{astConvert} method
+As described above, each class of Frame provides a \texttt{astConvert} method
 that determines if a Mapping can be created from an instance of the specific
 Frame class to any other Frame. In general, this will only be possible
 between instances of the same Frame class (i.e., Frames that represent
-alternative coordinates systems within the same physical domain).
-However, the implementation of the astConvert method supplied by the
+alternative coordinate systems within the same physical domain).
+However, the implementation of the \texttt{astConvert} method supplied by the
 CmpFrame class allows a Mapping to be created between a CmpFrame and
 either of the two component Frames. So for instance a CmpFrame describing
 the ``SKY-SPECTRUM'' domain could be matched with any of the following:
@@ -1003,11 +1008,11 @@ for the ``missing'' axes.}.
 So for instance, if a general purpose program reads the WCS from a data
 file of arbitrary dimensionality and wants to ask the question ``can I
 determine the ICRS (RA,Dec) of each pixel position?'' it can create a
-SkyFrame describing ICRS (RA,dec) and then use the astConvert method to see
-if a Mapping can be created from the WCS Frame read from the data file to
-the \emph{template} SkyFrame describing the required coordinate system.
+SkyFrame describing ICRS (RA,dec) and then use the \texttt{astConvert} method
+to see if a Mapping can be created from the WCS Frame read from the data file
+to the \emph{template} SkyFrame describing the required coordinate system.
 This will allow ICRS (RA,Dec) to be determined for any 2-dimensional data
-file calibrated in any of the support celestial coordinates systems, and
+file calibrated in any of the support celestial coordinate systems, and
 also any multi-dimensional data file that contains a pair of celestial
 coordinate axes.
 
@@ -1026,16 +1031,16 @@ For instance, a FrameSet describing an image taken by a telescope may
 have three Frames describing pixel coordinates, focal plane coordinates
 and sky coordinates.
 
-The FrameSet class provides a method, \emph{astGetMapping}, to return the
+The FrameSet class provides a method that returns the
 Mapping between any two nominated Frames. This may involve concatenating
 several Mappings if the two Frames are not directly connected to each
 other. For instance, if asked to returned the Mapping between Frame 1 and
-Frame 4 in Fig.~\ref{fig:complex-frameset}, the \emph{astGetMapping} method
+Frame 4 in Fig.~\ref{fig:complex-frameset}, the method
 will retrieve Mappings 1 and 3 from the FrameSet, and combine them in
 series into a single \emph{CmpMap} (compound Mapping).
 
-The FrameSet class also provides a method, \emph{astGetFrame}, to
-return any nominated Frame from a FrameSet.
+The FrameSet class also provides a method that returns any nominated Frame
+from a FrameSet.
 
 New Frames can be added to an existing FrameSet at any point in the tree
 structure. To so so, the caller must provide a Mapping that maps positions
@@ -1051,8 +1056,8 @@ parent Frame is retained so that its child Frames can still be reached.
 Two of the most common operations provided by systems such as AST are 1)
 converting positions from one Frame to another, and 2) enquiring or using
 the properties of a Frame. Performing these two operations repeatedly
-would become tedious if each such operation involved separate calls to
-\emph{GetMapping} or \emph{GetFrame} to extract the required Mapping or
+would become tedious if each such operation involved separate calls
+to extract the required Mapping or
 Frame from the FrameSet. To avoid this, AST is implemented in such a way
 that the FrameSet class effectively inherits from both the Mapping class
 and the Frame class. This means that any Mapping method, or any Frame
@@ -1109,7 +1114,7 @@ follows, starting from the original unmodified FrameSet:
 \item Create a copy of the current Frame (i.e., the (RA,Dec) Frame), and
 change the attributes of the copy so that it describes Galactic
 coordinates.
-\item Use the \emph{astConvert} method on the (RA,Dec) Frame to generate a
+\item Use the \texttt{astConvert} method on the (RA,Dec) Frame to generate a
 Mapping from (RA,Dec) to galactic coordinates.
 \item Add the galactic coordinates Frame into the FrameSet, using the
 above Mapping to connect it to the existing (RA,Dec) Frame.
@@ -1125,7 +1130,7 @@ the FrameSet class itself provides generalised ``integrity restoration''
 along the same lines, meaning that client code is relieved of the
 responsibility. Whenever any change is made to the current Frame within a
 FrameSet, the FrameSet class first takes a copy of the original Frame and
-makes the requested change to the copy. It then uses the \emph{astConvert}
+makes the requested change to the copy. It then uses the \texttt{astConvert}
 method to generate a Mapping from the old Frame to the modified copy. It
 then adds the modified copy into the FrameSet, using the Mapping returned
 by \emph{Convert} to connect it the original unmodified Frame. It finally
@@ -1140,19 +1145,18 @@ However there are times when this may not be what is wanted. For
 instance, if a mistake is made when setting the properties of a Frame
 prior to adding it into a FrameSet, then it should be possible to correct
 those mistakes without causing changes to be made to the Mappings within
-the FrameSet. This is possible by first getting a reference to the Frame
-using the FrameSet's \emph{astGetFrame} method, and then changing the Frame
-properties using that Frame reference, rather than the original FrameSet
-reference. Integrity restoration only occurs when the current Frame properties
-are changed via a FrameSet reference.
+the FrameSet. This is possible by first getting a reference to the Frame,
+and then changing the Frame properties using that Frame reference, rather
+than the original FrameSet reference. Integrity restoration only occurs
+when the current Frame properties are changed via a FrameSet reference.
 
 \subsubsection{Searching a FrameSet for a Frame with Required Properties}
-As described earlier, the \emph{astConvert} method defined by the Frame
+As described earlier, the \texttt{astConvert} method defined by the Frame
 class attempts to find a Mapping between two arbitrary
 Frames\footnote{This may or may not be possible depending on the nature
 of the two Frames.}. Since the FrameSet class inherits the methods of the
-Frame class, the \emph{astConvert} method can also be used on FrameSets. In
-this case the \emph{astConvert} method will search through all the Frames
+Frame class, the \texttt{astConvert} method can also be used on FrameSets. In
+this case the \texttt{astConvert} method will search through all the Frames
 in the FrameSet, starting with the current Frame, until a Frame is found
 for which a Mapping can be created. Since, in general, the Frames within a
 FrameSet all describe different domains, it is unlikely that more than one
@@ -1275,16 +1279,16 @@ coordinates described by the Box.
 
 \section{Serialisation, and FITS-WCS}
 AST includes a set of \emph{channel} classes, which allow AST objects to
-be serialised in various ways. The astWrite method of the basic Channel
-class converts a in-memory AST object into a set of text strings. By default
+be serialised in various ways. The basic Channel class has a method that
+converts a in-memory AST object into a set of text strings. By default
 these text strings are simply written to standard output, but an external
 ``sink'' function can be supplied to the Channel constructor which --- if
 supplied --- will be called by the Channel class to store each text
-string in some associated external store. The astRead method of the
-Channel class does the inverse --- it calls a supplied ``source''
+string in some associated external store. The Channel class has another
+method that does the inverse --- it calls a supplied ``source''
 function to read a set of text strings from an external store, and then
 creates an in-memory AST object from the text strings. A round-trip
-(astWrite followed by astRead) is lossless. The textual descriptions of
+(write followed read) is lossless. The textual descriptions of
 AST objects produced by the Channel class use a bespoke block structured
 format specific to AST.
 
@@ -1346,7 +1350,7 @@ using several externally defined ``foreign'' encodings. The FitsChan
 class provides facilities for reading and writing WCS information from
 FITS files using several different encoding schemes, including standard
 FITS-WCS \citep[FITS;][]{1995ASPC...77..233G}. The StcsChan
-class can read and write space-time metadata from a subset of the
+class can read and write space-time meta-data from a subset of the
 ``STC-S'' scheme developed by the IVOA \citep{STC}.
 
 These processes are in general not lossless. The degree to which
@@ -1620,11 +1624,11 @@ data sets are two-dimensional images of the sky, one dimensional spectra,
 3-dimensional time-space cubes, \emph{etc}. However, this will not always
 be possible, and it will still often be the case that an applications needs
 to check that the WCS in the supplied data is consistent with the
-specific requirements of the application. The ``astFindFrame'' method can
+specific requirements of the application. The \texttt{astFindFrame} method can
 often be used for this purpose. The application creates a Frame that acts
 as a template for the coordinate systems required by the application,
 and passes this Frame, together with the WCS FrameSet read from the data,
-to the astFindFrame method, which then searches the FrameSet looking for
+to the \texttt{astFindFrame} method, which then searches the FrameSet looking for
 a Frame that can be matched against the template. If such a Frame is
 found, information about the specific Frame found is returned, together
 with a Mapping that connects that Frame to one of the Frames in the WCS
@@ -1636,7 +1640,7 @@ data but does not care what that one dimension represents, it creates a
 attributes at their default values in the template (default values act as
 wild-cards during the searching process). The application then passes
 this template Frame, together with the WCS FrameSet read from the data
-file, to astFindFrame. Each Frame in the WCS FrameSet is then compared to
+file, to \texttt{astFindFrame}. Each Frame in the WCS FrameSet is then compared to
 the template to see if a match is possible. In this case, a basic Frame
 with no set attributes will match any 1-dimensional Frame of any form,
 but will not match Frames with more than one dimension.
@@ -1644,19 +1648,19 @@ but will not match Frames with more than one dimension.
 A specialised application for processing spectral data cubes may use for
 its template a 3-dimensional CmpFrame (compound Frame) containing a
 2-dimensional SkyFrame (celestial longitude/latitude axes) and
-1-dimensional SpecFrame (a spectral axis). The astFindFrame will then
+1-dimensional SpecFrame (a spectral axis). The \texttt{astFindFrame} will then
 only match 3-dimensional Frames with similar properties. Note, if the
 System attribute is set to specific values in the SkyFrame and/or
 SpecFrame contained within the template, then the Mapping returned by
-astFindFrame will include the transformations needed to convert from the
+\texttt{astFindFrame} will include the transformations needed to convert from the
 system of the matching Frame to that of the template Frame. So for
 instance, if the template axes are $(RA,Dec,Wavelength)$ and the WCS
 FrameSet contains a CmpFrame with $(Frequency,GalacticLongitude,
-GalacticLatitude)$ axes, the Mapping returned by astFindFrame will include an
+GalacticLatitude)$ axes, the Mapping returned by \texttt{astFindFrame} will include an
 axis permutation, and the transformations needed to convert from frequency
 to wavelength, and from Galactic coordinates to $(RA,Dec)$.
 
-In other words, astFindFrame provides arbitration between the WCS
+In other words, \texttt{astFindFrame} provides arbitration between the WCS
 requirements of the application, and the WCS information that is available
 in the supplied data set, returning a null result if the requirements of
 the application are not met by the data set.
@@ -1668,7 +1672,7 @@ in some way, it will usually be necessary to form a connection between
 the WCS in the two data sets, so that corresponding data values in each
 data set can be identified\footnote{Possibly the most common example is
 co-adding several images into a single mosaic.}. This is accomplished in
-a completely general way within AST using the astConvert method
+a completely general way within AST using the \texttt{astConvert} method
 described in section~\ref{sec:domain}, which searches two FrameSets
 looking for a pair of Frames that can be connected together using some
 known Mapping.
@@ -1685,8 +1689,8 @@ transformation that has been applied to the pixel array, and then
 data set. The resulting modified FrameSet should be stored in the output
 data set. Re-mapping a Frame within a FrameSet means appending the
 supplied Mapping to the existing Mapping that connects the Frame with its
-parent in the FrameSet. The astRemapFrame method is provided to do this.
-It also simplifies the resulting compound Mapping if possible.
+parent in the FrameSet. A method is provided to do this, which also simplifies
+the resulting compound Mapping if possible.
 
 For instance, if an application rotates an input image to create an
 output image, the application should create a 2-dimensional MatrixMap to
@@ -1794,68 +1798,6 @@ source code for the AST library is open-source using the GNU Lesser General
 Public License and is available
 online\footnote{\url{https://github.com/Starlink/starlink}}.
 
-
-%% The Appendices part is started with the command \appendix;
-%% appendix sections are then done as normal sections
-\appendix
-
-\section{Methods and Properties}
-\label{app:classes}
-
-This appendix includes brief descriptions of the more significant methods
-and properties of the three main classes used by AST - Mapping, Frame and
-FrameSet.
-
-\subsection{The Mapping Class}
-The most important public methods of the base Mapping class are:
-
-\begin{description}
-
-\item[astInvert:] Invert a Mapping (i.e., swap the input and output spaces).
-
-\item[astLinearApprox:] Create a new Mapping which is a linear approximation
-to the supplied Mapping.
-
-\item[astMapSplit:] Create (if possible) a new Mapping that represents a
-subspace within the output space of the supplied Mapping. For instance,
-given a Mapping from 3-dimensional pixel coordinates to
-(RA,Dec,wavelength), create a Mapping between 2-dimensional pixel
-coordinates and (RA,Dec). This is only possible if the requested subspace
-is independent of the other output axes.
-
-\item[astRate:] Calculate the rate of change of a specified axis within the
-output space, with respect to a specified axis within the input space, at
-a given position within the input space.
-
-\item[astRebin:]: Re-bin the pixel values within an input data array to create
-an output data array, using the forward transformation of the supplied Mapping
-to define the position within the output array at which each input pixel value
-is placed.
-
-\item[astResample:]: Re-sample the pixel values within an input data array to
-create an output data array, using the inverse transformation of the supplied
-Mapping to define the position within the input array from which each
-output pixel value is copied. A range of different interpolation schemes
-are provided.
-
-\item[astSimplify:] Simplify a compound Mapping (see
-section~\ref{sec:simplification}).
-
-\item[astTran:] Transform coordinates using the supplied Mapping.
-
-\end{description}
-
-The most important public properties of the base Mapping class are:
-\begin{description}
-
-\item[IsLinear:] A boolean flag indicating if the Mapping is linear.
-\item[Nin:] The number of axes within the input space of the Mapping.
-\item[Nout:] The number of axes within the output space of the Mapping.
-\item[TranForward:] A boolean flag indicating if the Mapping has a defined
-forward transformation.
-\item[TranInverse:] A boolean flag indicating if the Mapping has a defined
-inverse transformation.
-\end{description}
 
 
 %% References
