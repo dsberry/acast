@@ -682,7 +682,7 @@ multiplies each input vector by a specified matrix to create the output
 vector, will only have an inverse transformation if the matrix is square
 and invertable.
 
-\subsubsection{Classes of Mapping Provided by AST}
+\subsubsection{Atomic Mappings Provided by AST}
 AST provides many classes of Mapping that implement a wide range of
 different transformations. Most of these are \emph{atomic} Mappings that
 implement a specific numerical transformation and, if possible, its inverse.
@@ -718,20 +718,6 @@ section~\ref{sec:cmpmap}).
 
 \end{description}
 
-The most significant compound Mapping classes are (see
-section~\ref{sec:cmpmap} for a more detailed explanation of some of these
-classes):
-
-\begin{description}
-\item[CmpMap:] Combines two encapsulated Mappings in series or parallel.
-\item[SwitchMap:] Selects from a set of alternate Mappings depending on
-the location of each input position.
-\item[TranMap:] Use the forward transformations from one Mapping and the
-inverse transformation from another.
-\item[RateMap:] A Mapping that represents an element of the Jacobian
-matrix of an encapsulated Mapping.
-\end{description}
-
 All classes of Mapping are immutable. That is, a Mapping cannot be changed
 once it has been created. This is unlike Frame and FrameSet objects, which
 \emph{can} be changed.
@@ -739,8 +725,11 @@ once it has been created. This is unlike Frame and FrameSet objects, which
 \subsubsection{Compound Mappings}
 \label{sec:cmpmap}
 
-The CmpMap class is a subclass of Mapping that encapsulates two other
-Mappings either in series or in parallel. Either or both of the two
+The two most significant compound Mapping classes are:
+
+\begin{description}
+\item[CmpMap:]  The CmpMap class is a subclass of Mapping that encapsulates
+two other Mappings either in series or in parallel. Either or both of the two
 encapsulated Mappings can itself be a CmpMap, allowing arbitrarily complex
 Mappings to be created.
 
@@ -759,8 +748,9 @@ input dimensionalities of the two component Mappings, and the output
 dimensionality of the CmpMap is equal to the sum of the output
 dimensionalities of the two component Mappings.
 
-The SwitchMap class is a subclass of Mapping that allows a different
-transformation to be used for different regions within the input space.
+\item[SwitchMap:] The SwitchMap class is a subclass of Mapping that allows
+a different transformation to be used for different regions within the input
+space.
 
 Each SwitchMap encapsulates any number of other Mappings, known as ``route''
 Mappings, and one ``selector'' Mapping. All of these Mappings must have the
@@ -782,6 +772,9 @@ section~\ref{sec:region}) and returns an output value that indicates
 which of the  Regions (if any) contained the input value. Thus, the
 SwitchMap would typically contain one route Mapping for each of the
 Regions contained within the SelectorMap.
+
+\end{description}
+
 
 \subsubsection{Simplification}
 \label{sec:simplification}
@@ -811,19 +804,19 @@ a problem because it leads to:
 \begin{enumerate}
 \item slower evaluation of the total transformation,
 \item less accurate evaluation of the total transformation, and
-\item more room being needed to store the total transformation.
+\item more room being needed for storage.
 \end{enumerate}
 
 To avoid this, the Mapping class provides a method that takes a
 potentially complex Mapping and simplifies it as far as possible. Doing
 such simplification in a general and effective manner is one of the most
 difficult challenges faced by the AST model, but experience has shown
-that the current scheme implemented in AST handles most cases
+that the current scheme handles most cases
 sufficiently well. The steps involved in simplification depend on the
 nature of the component Mappings in the total CmpMap. Each class of
 Mapping provides its own rules that indicate when and how it can be
 simplified, or combined with an adjacent Mapping in the chain. To
-illustrate the principle, some of the simplest examples include,
+illustrate the principle, some of the simplest examples include:
 
 \begin{enumerate}
 \item any Mapping can be combined with its own inverse to create a UnitMap,
@@ -832,7 +825,7 @@ illustrate the principle, some of the simplest examples include,
 multiplication to create a single MatrixMap,
 \item adjacent MatrixMaps in parallel can be combined to create a
 single MatrixMap of higher dimensionality (filling the off-diagonal
-quadrants with zeros).
+quadrants with zeros),
 \item adjacent ShiftMaps can be combined to form a single ShiftMap
 (either in series or in parallel).
 \end{enumerate}
@@ -869,7 +862,7 @@ contains one or more bad axis values, then in general all output axis
 values will be bad\footnote{One exception is that a parallel CmpMap may
 be able to generate non-bad values for some of its output axes.}.
 
-Mappings may also generate bad output values if the input position
+Mappings may also generate bad output axis values if the input position
 corresponds to a singularity in the transformation, or is outside the
 region in which the transformation is defined.
 
@@ -890,24 +883,40 @@ general be described using any one of several coordinate systems. For
 instance, any position on the sky can be described using ICRS
 coordinates, Galactic coordinates, \emph{etc}. Similarly, positions in
 the eletro-magnetic spectrum can be described using frequency,
-wavelength, velocity, \emph{etc}). Each subclass of Frame represents a
-specific domain, and in general will encapsulate all the meta-data needed
-to create a Mapping between any pair of supported coordinate systems
-within its domain\footnote{In retrospect, the Frame
-class should probably have been named \emph{Domain} rather than
-\emph{Frame}.}. For instance, the \emph{SkyFrame} class describes positions
-on the sky using a range of popular celestial coordinate systems. It extends
-the Frame class by adding various items of meta-data necessary to
-determine the conversion between any pair of supported celestial coordinate
-systems, the main
-items being the epoch of observation, and the reference
-equinox\footnote{The base Frame class includes the observer's geodetic
-position.}. Thus given two SkyFrames describing, say, FK5 (RA,Dec) and
+wavelength, velocity, \emph{etc}).
+
+Each subclass of Frame represents a specific domain with a domain name (a
+string) which is the same for all instances of the class. However, each
+instance of the class represents just one particular coordinate system
+within that domain. In general, each Frame sub-class will also
+encapsulate all the information needed to create a Mapping between any
+pair of supported coordinate systems within its domain.
+
+For example, the \emph{SkyFrame} class represents the astronomical sky (its
+domain) and has the domain name ``SKY''. It knows about a range of celestial
+coordinate systems that can be used to describe positions on the sky.
+However, an instance of the SkyFrame class represents only one of these
+celestial coordinate systems at a time. The particular one it represents is
+stored in its ``system'' attribute (an instance variable) which takes
+values such as ``ICRS'', ``FK5'', ``Galactic'', \emph{etc.}
+
+The SkyFrame class extends the Frame class by incorporating various other
+items of metadata necessary to perform conversion between the supported
+celestial coordinate systems, the main items being the epoch of observation
+and the reference equinox \footnote{The base Frame class includes the
+observer's geodetic position.}. These are also instance variables and
+therefore specific to each SkyFrame instance. The coordinate system
+represented by a SkyFrame can be changed at any time simply by assigning new
+values to any of the relevant attributes.
+
+\subsubsection{Coordinate Conversion within Domains}
+\label{sec:domConversion}
+Thus given two SkyFrames describing, say, FK5 (RA,Dec) and
 Galactic (l,b), it is possible to create a Mapping between them based on
 the meta-data stored within the two SkyFrames. This Mapping can then be
 used to convert (RA,Dec) positions into equivalent (l,b) positions, or
 vice-versa. The process of creating this Mapping is implemented within
-the \texttt{astConvert} method of the base Frame class. For instance, in
+the \texttt{astConvert} method of the Frame class. For instance, in
 Python:
 
 \begin{lstlisting}
@@ -918,33 +927,32 @@ will, if possible, generate a Mapping from \texttt{frame1} to
 \texttt{frame2}. The returned Mapping is encapsulated within a FrameSet that
 also includes copies of \texttt{frame1} and \texttt{frame2}.
 
-Likewise, the SpecFrame class encapsulates all the meta-data needed to
+Likewise, the SpecFrame class encapsulates all the information needed to
 create Mappings between any pair of supported spectral coordinate system,
-including rest frequency, standard of rest, celestial reference position,
-etc.
+accounting for rest frequency, standard of rest, celestial reference position,
+\emph{etc.}
 
 The principle that each class of Frame contains all the meta-data and
 intelligence required to create a Mapping between any two coordinate
 systems within the Frame's domain, extends to compound Frames as well as
-atomic Frames, as described in the next section. The domain associated
-with a specific Frame is stored as a simple string such as ``SKY'',
-``SPECTRUM'', ``TIME'', etc.
+atomic Frames, as described in the next section.
 
 The base Frame class itself is slightly unusual in that it can be used to
 describe any generic domain, and is restricted to a single Cartesian
 coordinate system within that domain. The domain associated with a basic
 Frame is specified by the caller and can be any arbitrary string. Clearly,
-this restricts the usefulness of a basic Frame (compared to other more
-specialised classes of Frames) in that it is not possible to include any
+this restricts the usefulness of a basic Frame (compared to more
+specialised classes of Frame) in that it is not possible to include any
 knowledge about multiple coordinate systems given the arbitrary nature of
-the domain. The only exception to this is that the basic Frame class
+the domain. The only exception is that the basic Frame class
 knows how to convert between different dimensionally equivalent units.
-Thus the implementation of the \texttt{astConvert} method provided by the basic Frame
+Thus the implementation of the \texttt{astConvert} method provided by the
+basic Frame
 class can generate a Mapping between two basic Frames if they have the
 same domain name, the same number of axes, and the axes have dimensionally
 equivalent units.
 
-\subsubsection{Classes of Frame Provided by AST}
+\subsubsection{Atomic Frame Classes Provided by AST}
 AST provides several classes of Frame that describe different specialised
 domains. As with Mappings, these can be divided into \emph{atomic} Frames that
 describe a single specific domain, and \emph{compound} Frames that combine
@@ -967,30 +975,39 @@ sideband spectral coordinate systems.
 systems.
 \end{description}
 
+\subsubsection{Compound Frames}
+
 The following compound Frame classes are provided:
 
 \begin{description}
-\item[CmpFrame:] Combines the axes from any two other Frames.
-\item[SpecFluxFrame :] Combines a FluxFrame with a SpecFrame.
+
+\item[CmpFrame:]  The \emph{CmpFrame} (compound Frame) class describes a
+coordinate system that combines the axes from two other Frames, in any
+order. The name of the domain associated with a CmpFrame is constructed
+automatically from the domain names of the two component Frames. For
+instance if a CmpFrame contains a SkyFrame and a SpecFrame, then its
+domain name will be ``SKY-SPECTRUM''.
+
+\item[SpecFluxFrame :] The \emph{SpecFluxFrame} class combines a FluxFrame
+with a SpecFrame.
+
 \end{description}
 
-\subsubsection{Compound Frames}
-The \emph{CmpFrame} (compound Frame) class describes a coordinate system
-that combines the axes from two other Frames, in any order. The name of
-the domain associated with a CmpFrame is constructed automatically from
-the domain names of the two component Frames. For instance if a CmpFrame
-contains a SkyFrame and a SpecFrame, then its domain name will be
-``SKY-SPECTRUM''.
+\subsubsection{Coordinate Conversion within Compound Domains}
+The principle that Frame classes contain all the information necessary to
+convert between any coordinate systems within their domain also applies
+to compound Frames and the compound domains that they represent. This
+facility is accessed through the astConvert method, as with atomic Frames
+(see section~\ref{sec:domConversion}).
 
-As described above, each class of Frame provides a \texttt{astConvert} method
-that determines if a Mapping can be created from an instance of the specific
-Frame class to any other Frame. In general, this will only be possible
-between instances of the same Frame class (i.e., Frames that represent
-alternative coordinate systems within the same physical domain).
-However, the implementation of the \texttt{astConvert} method supplied by the
-CmpFrame class allows a Mapping to be created between a CmpFrame and
-either of the two component Frames. So for instance a CmpFrame describing
-the ``SKY-SPECTRUM'' domain could be matched with any of the following:
+With atomic Frames, conversion is only possible between instances of the
+same Frame class (i.e. Frames that represent alternative coordinate
+systems within the same physical domain). However, with a compound Frame
+containing (say) two sub-components, it may be possible to find a
+conversion to either or both of the two sub-Frames, so that a new range
+of possibilities opens up. For instance, a CmpFrame describing the
+3-dimensional ``SKY-SPECTRUM'' domain might be matched with any of the
+following:
 
 \begin{itemize}
 \item Another CmpFrame describing the SKY-SPECTRUM domain.
@@ -999,22 +1016,24 @@ the ``SKY-SPECTRUM'' domain could be matched with any of the following:
 \item A SpecFrame (i.e., a Frame describing the SPECTRUM domain).
 \end{itemize}
 
-If the destination Frame has fewer axes than the source Frame, then the
-Mapping will contain a \emph{permMap} - an atomic Mapping that permutes
-and selects a subset of its input axes\footnote{The inverse Mapping will
-either supply a specified fixed value, or a ``bad'' (i.e., missing) value
-for the ``missing'' axes.}.
+where a ``match'' means that conversion is possible. If the destination
+Frame has fewer axes than the source Frame, then the resulting Mapping
+will contain a PermMap - an atomic Mapping that permutes and selects a
+subset of its input axes.
 
-So for instance, if a general purpose program reads the WCS from a data
-file of arbitrary dimensionality and wants to ask the question ``can I
-determine the ICRS (RA,Dec) of each pixel position?'' it can create a
-SkyFrame describing ICRS (RA,dec) and then use the \texttt{astConvert} method
-to see if a Mapping can be created from the WCS Frame read from the data file
-to the \emph{template} SkyFrame describing the required coordinate system.
-This will allow ICRS (RA,Dec) to be determined for any 2-dimensional data
-file calibrated in any of the support celestial coordinate systems, and
-also any multi-dimensional data file that contains a pair of celestial
-coordinate axes.
+Because CmpFrames can be nested arbitrarily deeply and their axes can be
+permuted, deciding whether conversion is possible can be non-trivial, but
+the facility has great power and can form the basis of a search function
+for coordinate systems. For instance, if a general purpose program reads
+the WCS from a data file of arbitrary dimensionality and wants to ask the
+question ``can I determine the ICRS (RA,Dec) of each pixel position?'' it
+can create a SkyFrame describing ICRS (RA,dec) and then use the
+\texttt{astConvert} method to see if a Mapping can be created from the
+WCS Frame read from the data file to the \emph{template} SkyFrame
+describing the required coordinate system. This will allow ICRS (RA,Dec)
+to be determined for any 2-dimensional data file calibrated in any of the
+support celestial coordinate systems, and also any multi-dimensional data
+file that contains a pair of celestial coordinate axes.
 
 \subsection{FrameSets}
 
