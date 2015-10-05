@@ -56,12 +56,12 @@
 \definecolor{mygreen}{rgb}{0,0.5,0}
 \lstset{
   language=Python,
-  basicstyle=\small\ttfamily,
+  basicstyle=\scriptsize\ttfamily,
   showstringspaces=false,
-  stringstyle=\color{red},
-  keywordstyle=\bfseries\color{mygreen},
+  stringstyle=\color{black},
+  keywordstyle=\bfseries\color{black},
   morecomment=[l]{/},
-  commentstyle=\color{blue},
+  commentstyle=\color{black},
 }
 
 %% The lineno packages adds line numbers. Start line numbering with
@@ -499,7 +499,7 @@ Deciding to write an OO system in a non-OO language took considerable
 thought. We needed to provide a Fortran-callable interface but, at the
 time, the portability of C++ code was quite limited if one needed to
 call it from Fortran, so that route was unattractive\footnote{Further, there
-was no offical C++ standard available at the time - the first international
+was no official C++ standard available at the time - the first international
 standard for C++ (ISO/IEC 14882:1998) was published in 1998.}. Eventually, we
 were guided by the approach described by \citet{1992Holub} for
 handling objects in C and were able to hide the detail from users
@@ -883,7 +883,7 @@ general be described using any one of several coordinate systems. For
 instance, any position on the sky can be described using ICRS
 coordinates, Galactic coordinates, \emph{etc}. Similarly, positions in
 the eletro-magnetic spectrum can be described using frequency,
-wavelength, velocity, \emph{etc}).
+wavelength, velocity, \emph{etc}.
 
 Each subclass of Frame represents a specific domain with a domain name (a
 string) which is the same for all instances of the class. However, each
@@ -906,18 +906,35 @@ celestial coordinate systems, the main items being the epoch of observation
 and the reference equinox \footnote{The base Frame class includes the
 observer's geodetic position.}. These are also instance variables and
 therefore specific to each SkyFrame instance. The coordinate system
-represented by a SkyFrame can be changed at any time simply by assigning new
-values to any of the relevant attributes.
+represented by an instance of the SkyFrame class can be changed at any time
+simply by assigning new values to any of the relevant attributes, as in
+the following Python examples:
+
+\begin{lstlisting}
+import starlink.Ast as Ast
+
+# Create a Frame describing ICRS Right
+# Ascension and Declination. This is the
+# default system for the SkyFrame class.
+frame1 = Ast.SkyFrame()
+
+# Create a deep copy, and change the System
+# attribute of the copy so that it represents
+# Galatic longitude and latitude.
+frame2 = frame1.copy()
+frame2.System = "Galactic"
+
+\end{lstlisting}
 
 \subsubsection{Coordinate Conversion within Domains}
 \label{sec:domConversion}
-Thus given two SkyFrames describing, say, FK5 (RA,Dec) and
-Galactic (l,b), it is possible to create a Mapping between them based on
-the meta-data stored within the two SkyFrames. This Mapping can then be
-used to convert (RA,Dec) positions into equivalent (l,b) positions, or
-vice-versa. The process of creating this Mapping is implemented within
-the \texttt{astConvert} method of the Frame class. For instance, in
-Python:
+Given the two SkyFrames from the example in the previous section, it is
+possible to create a Mapping between them (\emph{i.e.} from FK5 (RA,Dec)
+to Galactic (l,b)) based on the meta-data stored within the two
+SkyFrames. This Mapping can then be used to convert (RA,Dec) positions
+into equivalent (l,b) positions, or vice-versa. The process of creating
+this Mapping is implemented within the \texttt{astConvert} method of the
+Frame class. For instance:
 
 \begin{lstlisting}
 my_frameset = frame1.convert( frame2 )
@@ -930,7 +947,30 @@ also includes copies of \texttt{frame1} and \texttt{frame2}.
 Likewise, the SpecFrame class encapsulates all the information needed to
 create Mappings between any pair of supported spectral coordinate system,
 accounting for rest frequency, standard of rest, celestial reference position,
-\emph{etc.}
+\emph{etc.}, as in the following example:
+
+\begin{lstlisting}
+import starlink.Ast as Ast
+
+#  Create a Frame describing helio-centric
+#  Radio Velocity in units of km/s, with a rest
+#  frequency of 345.8 GHz.
+frame1 = Ast.SpecFrame( "System=VRAD,RestFreq=345.8" )
+
+#  Create a deep copy, and change the attributes
+#  so that the copy describes frequency units of
+#  "Hz" with respect to the kinematic Local Standard
+#  of Rest.
+frame2 = frame1.copy()
+frame2.System = "FREQ"
+frame2.Unit_1 = "Hz"
+frame2.StdOfRest = "LSR"
+
+#  Create a FrameSet that contains the Mapping
+#  between these two spectral coordinate systems.
+my_frameset = frame1.convert( frame2 )
+
+\end{lstlisting}
 
 The principle that each class of Frame contains all the meta-data and
 intelligence required to create a Mapping between any two coordinate
@@ -947,10 +987,9 @@ knowledge about multiple coordinate systems given the arbitrary nature of
 the domain. The only exception is that the basic Frame class
 knows how to convert between different dimensionally equivalent units.
 Thus the implementation of the \texttt{astConvert} method provided by the
-basic Frame
-class can generate a Mapping between two basic Frames if they have the
-same domain name, the same number of axes, and the axes have dimensionally
-equivalent units.
+basic Frame class can generate a Mapping between two basic Frames if they
+have the same domain name, the same number of axes, and the axes have
+dimensionally equivalent units.
 
 \subsubsection{Atomic Frame Classes Provided by AST}
 AST provides several classes of Frame that describe different specialised
@@ -1032,37 +1071,59 @@ can create a SkyFrame describing ICRS (RA,dec) and then use the
 WCS Frame read from the data file to the \emph{template} SkyFrame
 describing the required coordinate system. This will allow ICRS (RA,Dec)
 to be determined for any 2-dimensional data file calibrated in any of the
-support celestial coordinate systems, and also any multi-dimensional data
+supported celestial coordinate systems, and also for any multi-dimensional data
 file that contains a pair of celestial coordinate axes.
 
 \subsection{FrameSets}
 
-The \emph{FrameSet} class represents a network of inter-related
-coordinate systems in the form of a tree-structure in which each node
-is a Frame, with the nodes being connected together by Mappings (see
-Fig.~\ref{fig:complex-frameset}). It is
-usual (although not required) for each Frame in a FrameSet to describe a
-different domain. A single FrameSet can be used, for instance, to provide
-a complete description of the WCS associated with a data array. In this
-case, one of the Frames represents pixel coordinates, and the other
-Frames represent a collection of alternative world coordinate systems.
-For instance, a FrameSet describing an image taken by a telescope may
-have three Frames describing pixel coordinates, focal plane coordinates
-and sky coordinates.
+Converting between different coordinate systems within the same domain is
+handled by Frame and its sub-classes. However, converting between
+different domains (e.g. between pixel coordinates and sky coordinates) is
+not possible in this way because there is no intrinsic relationship
+between the two domains unless extra information is supplied. This extra
+information typically describes experimental configurations; for example
+where a telescope was pointing (or the settings of a spectrograph). Given
+this additional detail, it becomes possible to tie the two domains
+together, so that conversion can be performed between a pixel-based
+coordinate system and any celestial coordinate system (or wavelength
+system in the case of a spectrum) .
 
-The FrameSet class provides a method that returns the
-Mapping between any two nominated Frames. This may involve concatenating
-several Mappings if the two Frames are not directly connected to each
-other. For instance, if asked to returned the Mapping between Frame 1 and
-Frame 4 in Fig.~\ref{fig:complex-frameset}, the method
-will retrieve Mappings 1 and 3 from the FrameSet, and combine them in
-series into a single \emph{CmpMap} (compound Mapping).
+Linking domains together in this way essentially creates a ``super
+domain'' where otherwise unconnected coordinate systems are bound
+together in a similar relationship to coordinate systems within a single
+domain.  This facility is typically required when calibrating the
+coordinate systems of experimental data and is provided by the
+\emph{FrameSet} class. It also finds use in graphics applications for
+attaching a variety of (typically curvilinear) coordinate systems to a
+plotting surface.
+
+Each domain within this ``super domain'', is represented by a separate
+Frame. If a FrameSet is used, for instance, to provide a complete
+description of the WCS associated with a data array, then one of the
+Frames within the FrameSet will represent pixel coordinates, and the
+other Frames will represent a collection of alternative world coordinate
+systems. For instance, a FrameSet describing an image taken by a
+telescope may have three Frames describing pixel coordinates, focal plane
+coordinates and sky coordinates.
+
+\subsubsection{FrameSets as Tree Structures}
+A FrameSet represents a network of inter-related coordinate systems in
+the form of a tree-structure in which each node is a Frame, with the
+nodes being connected together by Mappings (see Fig.~\ref{fig:complex-frameset}).
+
+The FrameSet class provides a method that returns the Mapping between any
+two nominated Frames. This may involve concatenating several Mappings if
+the two Frames are not directly connected to each other. For instance, if
+asked to return the Mapping between Frame 1 and Frame 4 in
+Fig.~\ref{fig:complex-frameset}, the method will retrieve Mappings 1 and
+3 from the FrameSet, and combine them in series into a single
+\emph{CmpMap} (compound Mapping).
 
 The FrameSet class also provides a method that returns any nominated Frame
 from a FrameSet.
 
 New Frames can be added to an existing FrameSet at any point in the tree
-structure. To so so, the caller must provide a Mapping that maps positions
+structure. To do so, the caller must provide a Mapping that maps positions
 from an existing Frame in the FrameSet to the new Frame.
 
 Frames can also be removed from a FrameSet. If the Frame is a leaf node
@@ -1072,7 +1133,7 @@ a leaf node, the Frame is removed but the Mapping that connects it to its
 parent Frame is retained so that its child Frames can still be reached.
 
 \subsubsection{Base and Current Frames}
-Two of the most common operations provided by systems such as AST are 1)
+Two of the most common operations on FrameSets are 1)
 converting positions from one Frame to another, and 2) enquiring or using
 the properties of a Frame. Performing these two operations repeatedly
 would become tedious if each such operation involved separate calls
@@ -1086,26 +1147,34 @@ The FrameSet class allows two nominated Frames to be flagged within each
 FrameSet. One is referred to as the ``current Frame'', and the other as
 the ``base Frame''\footnote{The FrameSet class provides methods to set
 and retrieve the index of these two Frames.}. When used as a Frame, a
-FrameSet is equivalent of its current Frame. When used as a Mapping, a
+FrameSet is equivalent to its current Frame. When used as a Mapping, a
 FrameSet is equivalent to the Mapping from its base Frame to its current
 Frame.
 
-In practice, the coordinate system in which axis values are initially
-generated or obtained is usually used as the base Frame. For instance a
-cursor application generates positions initially in graphics screen
-coordinates, and a centroiding application generates them in pixel
-coordinates.  The coordinate system in which positions are required by
-subsequent user (code or human) is usually used as the current Frame. This
-will often be some form of WCS, such as (RA,Dec), but could potentially
-be any of the Frames available in the FrameSet.
+When attaching WCS information to other data a FrameSet is typically
+employed and, by convention, its base Frame is used to represent the
+intrinsic coordinate system associated with the data. For example, the
+base Frame may be identified with the pixel coordinate system of an image
+or with the native coordinates used to address a plotting surface. The
+other Frames in the FrameSet represent alternative coordinate systems
+with which a user may choose to work and the current Frame represents the
+currently-selected coordinate system.
 
-When AST creates a FrameSet from the WCS information in a FITS file, the
-base Frame represents pixel coordinates, and the the current Frame
-represents the primary WCS. The FrameSet may also contain other Frames
-representing any alternate axis descriptions stored in the FITS-WCS.
-This means that the FrameSet can be used as a Mapping from pixel
-coordinates to primary WCS, and can also be used as a Frame to determine
-the properties of the primary WCS.
+For example, an application that locates objects in images may generate
+results in pixel coordinates, but can then transform them between the
+base and current Frame coordinate systems in order to present them to the
+user in the required form (possibly as celestial coordinates). Similarly,
+a cursor position read from a graphics device can be shown to the user
+not in device coordinates, but in a form they can more readily
+understand.
+
+When AST reads WCS data from a FITS file, it creates a FrameSet with this
+form; the base Frame represents pixel coordinates and the current Frame
+represents the FITS primary world coordinate system. The FrameSet may
+also contain other Frames representing any alternate axis descriptions
+stored in the FITS-WCS. This means that the FrameSet can be used as a
+Mapping from pixel coordinates to primary WCS, and can also be used as a
+Frame to determine the properties of the primary WCS.
 
 The caller is free to select new base and/or current Frames at any time.
 
@@ -1194,11 +1263,11 @@ if result is None:
 \end{lstlisting}
 
 In this example \texttt{frameset} is searched for a SkyFrame. If found, a
-FrameSet is returned in which the base Frame is the matching Frame from
-\texttt{frameset}, and the current Frame is a copy of \texttt{template}.
-In addition, the base Frame of \texttt{frameset} is set to indicate the
-matching Frame. If no matching Frame is found, a null reference is
-returned by \emph{Convert}.
+new FrameSet is returned in which the base Frame is the matching Frame
+from \texttt{frameset}, the current Frame is a copy of \texttt{template} and
+the appropriate Mapping exists between them. In addition, the base Frame
+of \texttt{frameset} is set to indicate the matching Frame. If no matching
+Frame is found, a null reference is returned by \emph{Convert}.
 
 In the above example the specific celestial coordinate system represented
 by \texttt{template} was left unspecified when the SkyFrame was created.
@@ -1280,26 +1349,27 @@ automatically transformed into the new system by a process similar to
 that described for FrameSets in section~\ref{sec:integrity}.
 
 Regions can encapsulate a FrameSet in place of a Frame. In this case, the
-shape and extent of the Region are defined within the base Frame of the
-FrameSet, and the Region notionally represents a ``view'' of this shape
-transformed into the current Frame of the FrameSet. For instance, a
-``Box'' could be created to represent the rectangular extent of an image
-in pixel coordinates. Such a Box will contain a Frame describing pixel
-coordinates, the pixel coordinates at the centre of the image, and the
-extent of each dimension of the image (in pixels). The Frame in this Box
-could be replaced by a FrameSet in which the base Frame is again pixel
-coordinates, but the current Frame is (RA,Dec). Internally, the Box still
-represents a rectangular area in pixel coordinates, but is now viewed
-externally as the corresponding curvilinear area in the (RA,Dec) Frame.
-When the Box is used as a Mapping, it will first transform each position
-from (RA,Dec) into pixel coordinates, and then test these transformed
-positions to see if they are within the rectangular area of pixel
-coordinates described by the Box.
+axis values that define the shape and extent of the Region are given
+within the base Frame of the FrameSet, and the Region notionally
+represents a ``view'' of this shape transformed into the current Frame of
+the FrameSet. For instance, a ``Box'' could be created to represent the
+rectangular extent of an image in pixel coordinates. Such a Box will
+contain a Frame describing pixel coordinates, the pixel coordinates at
+the centre of the image, and the extent of each dimension of the image
+(in pixels). The Frame in this Box could be replaced by a FrameSet in
+which the base Frame is again pixel coordinates, but the current Frame is
+(RA,Dec). Internally, the Box still represents a rectangular area in
+pixel coordinates, but is now viewed externally as the corresponding
+curvilinear area in the (RA,Dec) Frame. When the Box is used as a
+Mapping, it will first transform each position from (RA,Dec) into pixel
+coordinates, and then test these transformed positions to see if they are
+within the rectangular area of pixel coordinates described by the Box.
 
 \section{Serialisation, and FITS-WCS}
-AST includes a set of \emph{channel} classes, which allow AST objects to
-be serialised in various ways. The basic Channel class has a method that
-converts a in-memory AST object into a set of text strings. By default
+AST includes a set of \emph{Channel} classes, which allow AST objects to
+be serialised in various ways for persistent external storage. The basic
+Channel class has a method that converts an in-memory AST object into a set
+of text strings. By default
 these text strings are simply written to standard output, but an external
 ``sink'' function can be supplied to the Channel constructor which --- if
 supplied --- will be called by the Channel class to store each text
@@ -1311,21 +1381,24 @@ creates an in-memory AST object from the text strings. A round-trip
 AST objects produced by the Channel class use a bespoke block structured
 format specific to AST.
 
-Within the Python interface, the \emph{print} function uses a Channel
-to produce a listing of the given AST object. As an example, the
-following Python code:
+As an example, the following Python code:
 
 \begin{lstlisting}
    map1 = starlink.Ast.PermMap( [3,1],
                              [2,-1,1], 12.2 )
    map2 = starlink.Ast.ZoomMap( 3, 4.0 )
    cmpmap = starlink.Ast.CmpMap( map1, map2 )
-   print( cmpmap )
+
+   channel = Ast.Channel()
+   channel.write( cmpmap )
 \end{lstlisting}
 
-produces the following output:
+produces the following output\footnote{Within the Python interface, the
+\emph{print} function uses a Channel to produce a listing of the given
+AST object. So the same output could more simply be produced by
+``\texttt{print( cmpmap )}''.}:
 
-\footnotesize
+\scriptsize
 \begin{verbatim}
  Begin CmpMap   # Compound Mapping
     Nin = 2     # Number of input coordinates
@@ -1365,7 +1438,8 @@ class), or into a set of FITS header cards (the FitsChan class).
 
 In addition to the ``native'' block-structured object description
 outlined in the previous section, AST can also read and write objects
-using several externally defined ``foreign'' encodings. The FitsChan
+using several externally defined ``foreign'' encodings that allow data
+interchange with other systems. The FitsChan
 class provides facilities for reading and writing WCS information from
 FITS files using several different encoding schemes, including standard
 FITS-WCS \citep[FITS;][]{1995ASPC...77..233G}. The StcsChan
@@ -1394,37 +1468,18 @@ systems need to be managed. Just to emphasise that point, WCS handling is
 included as the last item in this section.
 
 \subsection{Generalised Plotting}
-
-Most plotting operations involve the use of several different Cartesian
-coordinate systems. A typical graphics package may need to deal with:
-
-\begin{itemize}
-\item A system defined by the graphics hardware (for instance, pixel indices
-on a computer screen, \emph{etc}).
-
-\item A system describing some normalised version of the above system (for
-instance, a system in which the shortest edge of the screen is normalized
-to unit length).
-
-\item A system describing a restricted window within the total plotting space
-(for instance, a system in which the shortest edge of the window is normalized
-to unit length).
-
-\item A system describing a restricted window within the total plotting space
-(for instance, a system in which the shortest edge of the window is normalized
-to unit length).
-
-\item A user-supplied system that results in the graphics window being mapped
-onto some specified viewport within Cartesian ``user'' coordinates.
-
-\end{itemize}
-
-Whilst in principle AST could be used internally within such a graphics
-package to handle these different coordinate systems, this has not (so
-far) been done. A more common usage of AST is to allow application
+Most graphics systems provide many coordinate systems through which the
+display can be addressed - device pixel coordinates, normalised viewport
+coordinates, \emph{etc}. However, since the details of the relationships
+between such coordinate systems may vary from system to system, AST does
+not attempt to describe them all. Instead it just assumes there is at
+least one such coordinate system available and provides facilities that
+allow it to be attached to that system and to use it to perform
+plotting\footnote{The user is still free to use the underlying graphics
+system directly when required.}. In addition, AST allows application
 software to define extra --- potentially non-linear --- coordinate
-systems, and to integrate them with the coordinate systems provided by an
-existing graphics package. For this purpose AST provides two classes ---
+systems, and to integrate them with the coordinate system provided by the
+underlying graphics package. For this purpose AST provides two classes ---
 \emph{Plot}, which provides two-dimensional plotting facilities, and
 \emph{Plot3D}, which provides three-dimensional plotting facilities.
 
@@ -1442,7 +1497,8 @@ different systems and languages\footnote{It is known that AST graphics
 have been used with plotting packages written in Java, Perl, Tk-Tcl and
 Python, as well as C and Fortran.}.
 
-The underlying graphics system can be specified in two ways:
+Each of the underlying graphics systems (the 2-d and 3-d plotting classes use
+separate systems) can be specified in two ways:
 
 \begin{enumerate}
 \item At build-time. In this method, a module must be supplied (callable from
@@ -1485,19 +1541,16 @@ include the Mappings needed to transform ``user'' coordinates into the
 corresponding graphics coordinates. A typical Plot may for instance
 have a current Frame that describes (RA,Dec) positions on the sky.
 
-When a Plot is created, an existing FrameSet must be supplied that
-includes the required ``user'' coordinate system together with some
-intermediate coordinate system (typically image pixel coordinates). The
-bounds of a viewport within this intermediate system must also be
-supplied. The FrameSet that \emph{is} the Plot is then created by adding
-an extra Frame representing graphics coordinates into the supplied
-FrameSet. This Frame becomes the base Frame in the Plot, and is connected
-to the intermediate coordinate Frame (\emph{e.g.}, pixel coordinates)
-using a Mapping that maps the requested viewport within intermediate
-coordinates onto the plotting area --- either linearly or
-logarithmically. In effect, the Plot becomes attached to the plotting
-surface in rather the same way that a basic FrameSet might be attached
-to (say) an image.
+When a Plot is created, an existing FrameSet is supplied together with
+the bounds of a box within its base Frame (typically image pixel
+coordinates). A Mapping (either linear or logarithmic) is created that
+maps this box onto a specified area within the graphics coordinates
+systems. The Plot constructor then initialises the new Plot to be a copy
+of the supplied FrameSet, and adds in a new Frame describing the graphics
+coordinates system, using the above Mapping to connect the new Frame to
+the base Frame. This new Frame is then made the base Frame in the Plot.
+In effect, the Plot becomes attached to the plotting surface in rather
+the same way that a basic FrameSet might be attached to (say) an image.
 
 The Plot class has methods that can draw markers, geodesic curves, text
 strings, \emph{etc}. The application code supplies the positions of these
@@ -1515,7 +1568,9 @@ a set of positions spread along the curve in user coordinates. All these
 positions are transformed into graphics coordinates before being plotted
 in the form of a ``poly-line''. The density of points varies along this
 line, and is chosen to ensure that any discontinuities or highly
-non-linear sections of the curve are drawn with reasonable accuracy.
+non-linear sections of the curve are drawn with sufficient accuracy. All
+aspects of the generated plot can be controlled via attributes of the Plot
+class.
 
 The most comprehensive drawing method supplied by the Plot class produces
 a complete set of annotated axes describing the area of user coordinates
@@ -1551,8 +1606,9 @@ more limited features offered by a typical 2-dimensional package.
 
 Fig.~\ref{fig:3dplot} shows an example of the 3-dimensional annotated axes
 produced by Plot3D. The Plot3D class was originally developed to
-support 3-D coordinate grid plotting in the GAIA application \citep[][\ascl{1403.024}]{2008ASPC..394..339D}
-using VTK \citep{Hanwell2015}.
+support 3-D coordinate grid plotting in the Starlink GAIA display tool
+\citep[][\ascl{1403.024}]{2008ASPC..394..339D} using the VTK 3-d graphics
+package \citep{Hanwell2015}.
 
 \begin{figure}[h]
 \centering
@@ -1617,7 +1673,7 @@ a FrameSet).
 \end{description}
 
 
-\subsection{WCS Handling}
+\subsection{Attaching WCS Information to Datasets}
 The most common reason for using AST is to allow the position of one or
 more data values to be described in a range of possible coordinate
 systems. For this purpose, a serialised FrameSet is often stored with the
@@ -1636,7 +1692,7 @@ The following sections describe just a few of the more common WCS
 operations that may be achieved using AST:
 
 \subsubsection{Validating WCS}
-The generalised description of WCS provided by AST makes it more possible
+The generalised description of WCS provided by AST makes it possible
 to write applications in a domain-agnostic manner. For instance, an
 application that uses WCS to align two data sets need not know whether the
 data sets are two-dimensional images of the sky, one dimensional spectra,
@@ -1694,7 +1750,8 @@ co-adding several images into a single mosaic.}. This is accomplished in
 a completely general way within AST using the \texttt{astConvert} method
 described in section~\ref{sec:domain}, which searches two FrameSets
 looking for a pair of Frames that can be connected together using some
-known Mapping.
+known Mapping. The AST documentation contains examples of how this can be
+done.
 
 \subsubsection{Modifying WCS Information}
 

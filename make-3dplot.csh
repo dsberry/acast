@@ -1,3 +1,4 @@
+rm 3dplot.pdf pgplot.pdf
 set olddir = $PWD
 cd /stardev/git/starlink/libraries/ast/ast_tester
 rm pgplot.*
@@ -22,6 +23,14 @@ majticklen=0.03
 colour(border)=4
 8
 colour(ticks)=4
+8
+colour_xy(ticks)=15
+8
+grid_xy=1
+8
+colour_xy(grid)=15
+8
+style_xy(grid)=4
 0
 HERE2
 
@@ -29,8 +38,8 @@ ps2pdf pgplot.ps pgplot.pdf
 gs \
   -o $olddir/pgplot.pdf \
   -sDEVICE=pdfwrite \
-  -dFirstPage=9 \
-  -dLastPage=9 \
+  -dFirstPage=13 \
+  -dLastPage=13 \
   ./pgplot.pdf
 
 cd $olddir
