@@ -266,7 +266,7 @@ addressed it properly.
 The Flexible Image Transport System
 \citep[FITS;][]{1981A&AS...44..363W,1995ASPC...77..233G}, at that
 time, addressed the issue in a better but still rudimentary way. In
-essence, it stored a physical pixel size (e.g., in seconds of arc),
+essence, it stored a physical pixel size (\emph{e.g.}, in seconds of arc),
 allowed for a linear scaling of an image (typically to allow for the
 position angle rotation of the telescope) and then projected it on to
 the celestial sphere using one of a defined set of map
@@ -345,7 +345,7 @@ these expressions, this greatly increased the set of functional forms
 that could be represented. The expressions themselves (encoded as
 character strings) and the associated parameter values could easily be
 stored in astronomical data sets. Typically, one set of expressions would
-relate pixel coordinates to world coordinates (e.g., sky coordinates) and
+relate pixel coordinates to world coordinates (\emph{e.g.}, sky coordinates) and
 a second, optional, set would define the inverse transformation. The
 expression syntax was powerful enough to represent a wide range of map
 projections plus many other transformations into alternative world
@@ -372,7 +372,7 @@ initially unforeseen purposes which turned out to be very significant:
 
 \begin{enumerate}
 \item Associating coordinate systems with plotting surfaces in a
-  ``graphics database'' \citep[see e.g.,][]{SUN48}. This allowed
+  ``graphics database'' \citep[see \emph{e.g.},][]{SUN48}. This allowed
   plotting applications to store a coordinate system for (say) a graph
   plotted in logarithmic coordinates so that those coordinates could
   later be recovered from the position of a cursor. This demonstrated
@@ -543,7 +543,7 @@ also needed to inter-operate with FITS. WCS data in FITS data files is
 stored in a series of 80-character header cards and, over the years,
 the number of different ways the information can be stored in these
 headers has grown. The complexity involved is now considerable
-\citep[see e.g.,][]{2015Thomas}. Again, detailed specialist knowledge
+\citep[see \emph{e.g.},][]{2015Thomas}. Again, detailed specialist knowledge
 is needed to extract this information reliably and to write it back
 (possibly modified) in a form that gives other FITS-handling software
 a chance of using it while not conflicting with the many other FITS
@@ -559,12 +559,12 @@ attention if they are to remain up to date. Embedding all these details
 in the AST library allows the problem to be addressed in one place and
 by someone with the necessary expertise.
 
-FITS header handling has proved one of the most complex areas to tame in AST.
-But introducing the concept of a \emph{destructive read} (which reads WCS
-data from FITS headers and simultaneously deletes the relevant headers)
-has made it possible to write applications with very little code that
-have completely general handling of FITS WCS headers.
-
+FITS header handling has proved one of the most complex areas to tame in
+AST. But introducing the concept of a \emph{destructive read} (which
+reads WCS data from FITS headers and simultaneously deletes the relevant
+headers) has made it possible to write applications with very little code
+that have completely general handling of FITS WCS headers (see
+section~\ref{sec:fitsencodings}).
 
 \section{The AST Data Model}
 \label{sec:model}
@@ -920,7 +920,7 @@ frame1 = Ast.SkyFrame()
 
 # Create a deep copy, and change the System
 # attribute of the copy so that it represents
-# Galatic longitude and latitude.
+# Galactic longitude and latitude.
 frame2 = frame1.copy()
 frame2.System = "Galactic"
 
@@ -1074,11 +1074,73 @@ to be determined for any 2-dimensional data file calibrated in any of the
 supported celestial coordinate systems, and also for any multi-dimensional data
 file that contains a pair of celestial coordinate axes.
 
+\subsubsection{Other Important Frame Methods}
+A primary goal of AST is to support high-level software that can process
+arbitrary coordinate systems without needing to know their details. This
+simplifies the high-level algorithms themselves and also allows them to
+benefit from later additions to the AST library (\emph{e.g.} new coordinate
+systems and domains) that did not exist when they were originally
+written. The object-oriented design of AST is key to this feature and it
+particularly affects the Frame classes.
+
+To this end, the base Frame class declares a range of methods that
+provide a generic interface for handling coordinate systems. These
+methods are then typically over-ridden by sub-classes so that they
+exhibit the required more specialised behaviour when manipulated by
+generic high-level algorithms. Rather than detail the interface in full,
+we will illustrate the principle with a few examples here.
+
+Encoding and decoding of axis values to/from text is a function that
+differs in detail between Frame sub-classes because of the differing
+conventions for formatting, say, simple floating point values, angles and
+times (the last two having a wide range of possible representations). The
+base Frame class defines a decoding interface that operates on arbitrary
+input text and converts it into axis values, regardless of the nature of
+the formatting involved or, indeed, which characters and delimiters are
+present. With suitable over-rides to the implementation in Frame
+sub-classes, this interface allows high-level software to read
+free-format input containing axis data for arbitrary Frames, including
+compound Frames, using a simple algorithm.
+
+A matching encoding interface formats axis values under the control of a
+``Format'' attribute string whose syntax can be over-ridden in Frame
+sub-classes to suite the formatting required. For example, the C-like
+``\texttt{\%.4f}'' might describe the formatting for a simple floating
+point axis, while the more specialised ``\texttt{hh:mm:ss}'' could be
+used for a Right Ascension axis. Being Frame-specific, however, these
+strings need to be set by specialised software, although defaults are
+provided. For a more generic interface, a ``Digits'' attribute is
+available that controls the number of significant digits shown and
+applies to any class of Frame. This finds particular use during graphical
+operations (see section~\ref{sec:plotting}).
+
+A related method defined by the base Frame class will wrap axis values
+into a standard range (\emph{e.g.} 0 to 360 degrees) where appropriate.
+This can be useful when reading and writing axis values, but also
+provides a simple way to characterise the different topologies of (say)
+flat, cylindrical and spherical spaces. A further method will return the
+distance between pairs of points, thereby defining the metric of the space
+that a Frame represents. The inverse operation is to return the
+coordinates of a point which is offset a given distance from a starting
+position in a defined direction.
+
+These methods, suitably over-ridden in each Frame sub-class, form the
+basis for many generic graphics operations such as drawing geodesic
+curves (which replace straight lines as the basic drawing element in AST)
+and coordinate axes. For example, to mark formatted numerical values on
+the possibly curved axis of a graph, the encoding function described
+above is used. The formatting precision (``Digits'' attribute) is
+progressively increased until all the formatted label values become
+distinct. This ensures adequate, but not excessive precision regardless
+of the range of axis values present and the algorithm works regardless of
+the type of Frame involved.
+
+
 \subsection{FrameSets}
 
 Converting between different coordinate systems within the same domain is
 handled by Frame and its sub-classes. However, converting between
-different domains (e.g. between pixel coordinates and sky coordinates) is
+different domains (\emph{e.g.} between pixel coordinates and sky coordinates) is
 not possible in this way because there is no intrinsic relationship
 between the two domains unless extra information is supplied. This extra
 information typically describes experimental configurations; for example
@@ -1133,6 +1195,7 @@ a leaf node, the Frame is removed but the Mapping that connects it to its
 parent Frame is retained so that its child Frames can still be reached.
 
 \subsubsection{Base and Current Frames}
+\label{sec:basecurrent}
 Two of the most common operations on FrameSets are 1)
 converting positions from one Frame to another, and 2) enquiring or using
 the properties of a Frame. Performing these two operations repeatedly
@@ -1280,90 +1343,102 @@ the returned \texttt{result} FrameSet.
 
 \subsection{Regions}
 \label{sec:region}
+Usually, axis values are stored simply as floating point values or arrays
+in the user's programming language and are not bound into AST objects.
+This is because the values are normally obtained and later used in this
+form (in other parts of the software, independently of AST). Also, speed
+of processing is vital. If axis values were routinely wrapped inside AST
+objects, the overhead of wrapping and unwrapping would be considerable,
+especially for small sets of positions that are processed repeatedly.
 
-Previous sections have described:
+Nevertheless, axis values strictly only make sense within a particular
+coordinate system and this association can be made explicit, if required,
+by binding a set of positions to a specific Frame. This is performed by
+the Region class which encapsulates a Frame and a list of points,
+specified by their positions in the coordinate system of the Frame. The
+Region class inherits from the Frame class, so a Region can be used in
+place of the Frame that it contains.
 
-\begin{enumerate}
-\item \emph{Mappings}, which transform numerical axis values.
-\item \emph{Frames}, which describe what those numerical axis values
-represent.
-\item \emph{FrameSets}, which associate Mappings with Frames.
-\end{enumerate}
+The binding between the positions and the Frame is enforced by the Region
+class through ``integrity restoration'' similar to that described in
+section~\ref{sec:integrity}. If changes to the enclosed Frame are made
+through a Region reference and they result in a change to the Frame's
+coordinate system, then the coordinates stored in the Region are
+automatically transformed into that new coordinate system.
 
-However, nothing has been said yet about how the actual axis values
-themselves are stored. This section address this issue. In most cases,
-the calling application code will organise and store the axis values
-itself in some manner, creating appropriate Mappings and Frames to
-process them. However AST also provides a collection of \emph{Region}
-classes, each of which encapsulates the axis values at a set of positions,
-along with a Frame describing the coordinate system to which those axis
-values refer.  As the name implies, each Region subclass describe a
-specific region within the encapsulated Frame.
+In practice, the Region class is abstract. It does not have a constructor
+function and is just a container class for other sub-classes which attach
+particular semantics to the set of positions that they contain. The
+simplest such sub-class is the PointList in which the positions are
+simple independent points. For example, a PointList might contain a set
+of star positions and a SkyFrame indicating that these are in ICRS
+coordinates. If the SkyFrame's ``System'' attribute is changed via a Region
+reference to represent FK5 coordinates, then the stored coordinates would
+change so that the star positions remain fixed on the sky. As mentioned
+above, however, the PointList is not much used for general coordinate
+processing because of the overhead of packing and unpacking the object.
 
-The simplest subclass of Region is the \emph{PointList} that represents a
-simple list of one or more unconnected points within the Frame.  In
-practice, PointLists are rarely used. This is because a typical
-application is usually interested in positions that it has determined
-itself in some way, and so can process them directly using Mappings
-without the need to create an intermediate container object such as a
-PointList. Applications that for instance displays the world coordinates
-of the cursor, or the centroid position of an object, will usually obtain
-the axis values in some ``base'' system such as graphics screen
-coordinates or pixel coordinates, and will then transform them directly
-into the coordinate system of interest using a suitable Mapping that it
-has obtained previously. There is no need to first wrap the axis values
-in a PointList, transform the PointList to a new coordinate system, and
-then extract the coordinates from the transformed PointList. Doing so can
-potentially introduces large overheads that can increase the overall time
-taken to do the transformation.
+Other sub-classes of Region attach different semantics to the set of
+positions enclosed. For example, there are sub-classes to represent
+circles, ellipses, boxes, polygons. etc., where the enclosed positions
+may be fixed in number and define the Region's shape (the centre and one
+corner of a box, for example). These classes divide the Frame's domain
+into an ``inside'' and an ``outside'' and, as the ``Region'' name suggests,
+they are used to represent regions (intervals, areas, volumes, etc.)
+within domains. A negation method is provided that interchanges the
+inside and outside of a Region. Separate Regions may also be combined in
+pairs using boolean operations (AND, OR or XOR) and the CmpRegion class
+(which is analogous to the CmpMap and CmpFrame classes described
+elsewhere). This allows Regions of arbitrary complexity to be built out
+of simple components.
 
-Other sub-classes of Region exist to describe circles, ellipses, boxes
-polygons, \emph{etc}. For instance, a Circle encapsulates two positions
-within a Frame - one being the centre of the required circle and the
-other being a point on its perimeter. A Polygon is similar to a PointList
-in that it encapsulates an arbitrary list of points. But in a Polygon,
-the points represent the vertices of a polygon with non-zero area, rather
-than a list of unconnected points with zero area.
+The significance of the ``inside'' and ``outside'' of a Region lies in its
+use as a Mapping, whose properties it inherits via the Frame class.
+Typically, a Region will map positions that lie inside it without change,
+but positions that lie outside are mapped to a special null value. This
+provides a test of whether a point is inside or outside a Region. A Prism
+class is also provided that allows Regions to be extruded into extra
+dimensions. For example, a 4-dimensional Prism can be formed by extruding
+a 2-dimensional Circle and a 2-dimensional Box. A 4-dimensional position
+is then regarded as inside the Prism if it lies inside the Circle on axes
+1 and 2 and inside the Box on axes 3 and 4.
 
-The \emph{CmpRegion} class is a compound Region that represents the
-union or intersection of two other Regions.  Another form of compound
-Region is the Prism class that allows Regions to be extruded into other
-dimensions\footnote{Some Region classes, such as Polygon and Ellipse, are
-intrinsically 2-dimensional, whereas other such as Circle and Box, can
-have more than 2 dimensions.}. For instance, a 4-dimensional Prism can be
-formed by combining a 2-dimensional Circle and a 2-dimensional Box. A
-4-dimensional position is considered to be inside the Prism if the values
-on axes 1 and 2 are inside the Circle, and the values on axes 3 and 4 are
-inside the Box.
+When combining Regions, it is not necessary for the coordinate systems
+represented by their enclosed Frames to be the same, but it must be
+possible to convert between them. If they differ, the astConvert method
+will be used to refer them both to a common coordinate system. Integrity
+restoration also means that any changes to a Region's Frame that changes
+the coordinate system will transform the boundary between the inside and
+outside of the Region into the new coordinate system. This may alter the
+nature of shapes such as circles, which might be distorted into ellipses
+or even more elaborate shapes under non-linear coordinate
+transformations. This is implemented by extending the enclosed Frame to
+become a FrameSet, in which the original undistorted coordinate system is
+preserved as the base Frame and the new coordinate system is the current
+Frame. When testing whether a point lies within the Region, it is first
+transformed from the current Frame into the base Frame of the Region's
+FrameSet and then tested against the Region as defined in that coordinate
+system.
 
-Like the FrameSet class, the base Region class inherits from both the
-Frame class and the Mapping class. When used as a Frame, it behaves like
-the encapsulated Frame. When used as a Mapping, it behaves like a unit
-transformation for positions that are inside the region, but returns
-``bad'' axis values for positions that are outside the region (see
-section~\ref{sec:bad}).
+In fact, Regions offer full support for enclosed FrameSets (as well as
+Frames) because a FrameSet is a sub-class of Frame and can therefore be
+supplied in place of a Frame when creating a Region. This allows a Region
+to be defined that has a known shape in one coordinate system but can be
+viewed through a range of other coordinate systems with corresponding
+changes to its shape. This offers another means of creating Regions with
+novel shapes.
 
-If the properties of the encapsulated Frame are changed so that it
-describes a different coordinate system, the encapsulated axis values are
-automatically transformed into the new system by a process similar to
-that described for FrameSets in section~\ref{sec:integrity}.
-
-Regions can encapsulate a FrameSet in place of a Frame. In this case, the
-axis values that define the shape and extent of the Region are given
-within the base Frame of the FrameSet, and the Region notionally
-represents a ``view'' of this shape transformed into the current Frame of
-the FrameSet. For instance, a ``Box'' could be created to represent the
-rectangular extent of an image in pixel coordinates. Such a Box will
-contain a Frame describing pixel coordinates, the pixel coordinates at
-the centre of the image, and the extent of each dimension of the image
-(in pixels). The Frame in this Box could be replaced by a FrameSet in
-which the base Frame is again pixel coordinates, but the current Frame is
-(RA,Dec). Internally, the Box still represents a rectangular area in
-pixel coordinates, but is now viewed externally as the corresponding
-curvilinear area in the (RA,Dec) Frame. When the Box is used as a
-Mapping, it will first transform each position from (RA,Dec) into pixel
-coordinates, and then test these transformed positions to see if they are
-within the rectangular area of pixel coordinates described by the Box.
+One obvious application of Regions is in the segmentation of datasets -
+for example, creating outlines that enclose objects or other regions of
+interest in an image. However, by using Regions as Mappings and combining
+them with other Mappings, it is possible to limit the range of
+coordinates that the Mapping will accept, such that null values are
+returned outside the Region. This effectively ``clips'' the range of
+validity of the Mapping. This clipping can be arranged to occur in any
+coordinate system: either the input or output space of the Mapping, an
+intermediate space, or one devised purely for the purpose of clipping.
+These techniques find particular use in graphical applications for
+limiting the extent of drawing operations.
 
 \section{Serialisation, and FITS-WCS}
 AST includes a set of \emph{Channel} classes, which allow AST objects to
@@ -1436,26 +1511,76 @@ class), or into a set of FITS header cards (the FitsChan class).
 
 \subsection{Foreign Encodings}
 
-In addition to the ``native'' block-structured object description
-outlined in the previous section, AST can also read and write objects
-using several externally defined ``foreign'' encodings that allow data
-interchange with other systems. The FitsChan
-class provides facilities for reading and writing WCS information from
-FITS files using several different encoding schemes, including standard
-FITS-WCS \citep[FITS;][]{1995ASPC...77..233G}. The StcsChan
-class can read and write space-time meta-data from a subset of the
-``STC-S'' scheme developed by the IVOA \citep{STC}.
+In addition to the ``native'' block-structured object description outlined
+above, AST can also read and write a range of ``foreign'' encodings that
+allow data exchange with other systems. Because this is essentially a
+format-conversion process it is not usually lossless. AST's flexibility
+allows it to represent information that it may not be possible to store
+in an external format, so some data loss may occur when writing and only
+particular types of AST object can be successfully converted. Conversely,
+when reading, there is normally little need to lose information, although
+the more obscure features of some formats may not all be supported.
 
-These processes are in general not lossless. The degree to which
-information is lost in transforming between AST and the external format
-depends on how closely the external data model matches that used by AST.
-The FitsChan class currently provides support for almost all of papers I,
-II and III in the FITS-WCS series \citep{FITSWCSI,FITSWCSII,FITSWCSIII}
+
+\subsubsection{FITS Encodings}
+\label{sec:fitsencodings}
+There are a number of conventions (unrelated to AST) for storing WCS
+information in FITS header cards and the rules governing their use is
+complex. Most programmers are unlikely to understand these technical
+details, so AST wraps them up in a simple high-level model provided by
+the FitsChan class. This provides a read/write interface between AST
+objects and FITS header cards (where each card represents a
+``keyword=value'' pair plus an optional comment).
+
+The FitsChan class currently provides support for almost all of papers
+I, II and III  in the FITS-WCS series \citep{FITSWCSI,FITSWCSII,FITSWCSIII}
 \footnote{Support for the tabular format associated with the ``-TAB'' code
 described in FITS-WCS paper III is limited to 1-dimensional(\emph{i.e.}
 separable) axes.}. As yet it does not provide support for converting
 between the AST TimeFrame class and the FITS-WCS description of time
-axes \citep{FITSWCSIV}.
+axes \citep{FITSWCSIV}. It also supports a variety of unofficial encodings
+that have been devised by particular projects over many years, including
+several popular methods for describing focal plane distortion.
+
+Normally, FITS headers do not simply hold WCS information; they also
+contain many additional cards describing other aspects of a dataset. Care
+is therefore needed to ensure these other cards are not accidentally
+removed or over-written while processing WCS information. Also, the
+various FITS encodings of WCS information may overlap in their use of
+FITS keywords, presenting an opportunity for keyword clashes.
+
+To handle this, a FitsChan contains a buffer which may be loaded with
+FITS header cards, normally read directly from a data file. The FitsChan
+analyses these cards, determines how any contained WCS information has
+been stored and makes this available through its ``Encoding'' attribute.
+This takes values such as ``FITS-WCS'', ``FITS-IRAF'', ``NATIVE '', etc. to
+indicate which convention has been used to store the information. A
+subsequent call to the FitsChan's astRead method will then perform a
+``destructive read'' on the buffer of FITS cards. This reads the AST object
+that they describe and then deletes all the relevant FITS cards. The
+method returns a FrameSet which holds the WCS information (see
+section~\ref{sec:basecurrent}) and at the same time this information is
+removed from the FITS header buffer, leaving it clear for new WCS
+information to be written without the possibility of any keyword clashes.
+
+To write a FrameSet\footnote{A FrameSet is the only valid object that
+can be written to a FitsChan.} to a FITS header, a FitsChan's astWrite
+method is used. This uses the ``Encoding'' attribute to determine which
+FITS header convention to use and then adds the resulting FITS header
+cards to the FitsChan buffer, from where they may be transferred to an
+output file. If changes have been made to a FrameSet such that it cannot
+be stored using the chosen FITS encoding, then the astWrite method will
+fail. AST will go to some lengths to simplify the information so that it
+is compatible with the data model of the selected encoding, but that is
+not always possible. In such cases, an alternative encoding can be chosen
+simply by modifying the ``Encoding'' attribute of the FitsChan.
+
+4.1.2 The STC-S Encoding
+The StcsChan class provides an interface between AST and space-time
+metadata from a subset of the ``STC-S'' scheme \citep{STC} developed by the
+International Virtual Observatory Alliance (IVOA). This allows AST
+Region objects to be converted to and from textual descriptions that
+use the STC-S conventions .
 
 \section{Fields of Application}
 This section describes some of the ways in which AST can be used.
@@ -1468,6 +1593,7 @@ systems need to be managed. Just to emphasise that point, WCS handling is
 included as the last item in this section.
 
 \subsection{Generalised Plotting}
+\label{sec:plotting}
 Most graphics systems provide many coordinate systems through which the
 display can be addressed - device pixel coordinates, normalised viewport
 coordinates, \emph{etc}. However, since the details of the relationships
@@ -1740,18 +1866,53 @@ requirements of the application, and the WCS information that is available
 in the supplied data set, returning a null result if the requirements of
 the application are not met by the data set.
 
-\subsubsection{Merging WCS information}
+\subsubsection{Merging WCS information (Alignment)}
+If a data processing operation involves combining two or more datasets in
+some way, it will usually be necessary to form a connection between the
+WCS in the two datasets, so that corresponding elements in each dataset
+can be identified. This process can be considered one of alignment. For
+example, in the case of images of the sky, we may wish to align them
+prior to combining them into a mosaic. If each dataset is calibrated
+using a FrameSet whose base Frame corresponds with the underlying data
+elements (e.g. pixels), then alignment involves finding a transformation
+between the base Frames of the two FrameSets involved.
 
-If a data processing operation involves combining two or more data sets
-in some way, it will usually be necessary to form a connection between
-the WCS in the two data sets, so that corresponding data values in each
-data set can be identified\footnote{Possibly the most common example is
-co-adding several images into a single mosaic.}. This is accomplished in
-a completely general way within AST using the \texttt{astConvert} method
-described in section~\ref{sec:domain}, which searches two FrameSets
-looking for a pair of Frames that can be connected together using some
-known Mapping. The AST documentation contains examples of how this can be
-done.
+This operation is performed using the astConvert method introduced in
+section~\ref{sec:domConversion}, whose role is to find a transformation
+between the coordinate systems represented by two Frames. Because
+FrameSets are also Frames, astConvert may be used to convert between two
+FrameSets. In this case, however, there is a choice of how to find a
+transformation between the two Frames that they represent (their current
+Frames). This is because links between two FrameSets can potentially be
+formed in a number of places by matching Frames within each FrameSet that
+have the same domain.
+
+An example should make this clear. Suppose we have two images, each
+calibrated with FrameSets whose base Frames represent image pixel
+coordinates. Also suppose that each FrameSet contains two additional
+Frames that give the image's position in the focal plane of a telescope
+(mm) and its position on the sky (RA,Dec). If we want to align these
+images, we can do it in three ways by matching: (1) corresponding pixels,
+(2) corresponding focal plane positions or (3) corresponding positions on
+the sky. Any of these is a legitimate way to align the two images and may
+be appropriate for different purposes.
+
+When presented with the two FrameSets,\footnote{Because astConvert acts
+on the current Frame of a FrameSet, the two FrameSets must actually be
+temporarily modified to interchange their base and current Frames.
+Inverting them will have this effect.} astConvert has the same
+choices. This ambiguity may be removed by supplying the name of the
+domain that we wish to use for alignment. In this example, we might
+select ``SKY'' and astConvert would then try to find a route between the
+two FrameSets that joins a pair of SkyFrames (representing celestial
+coordinates), one from each FrameSet. A domain ``search path'' may also be
+given, in which case each listed domain will be tried in turn until one
+succeeds.
+
+The result returned by astConvert will be a FrameSet which, when used as
+a Mapping, converts pixel coordinates in one image into pixel coordinates
+in the second image, such that the two images are aligned in the selected
+domain.
 
 \subsubsection{Modifying WCS Information}
 
