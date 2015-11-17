@@ -923,7 +923,6 @@ frame1 = Ast.SkyFrame()
 # Galactic longitude and latitude.
 frame2 = frame1.copy()
 frame2.System = "Galactic"
-
 \end{lstlisting}
 
 \subsubsection{Coordinate Conversion within Domains}
@@ -937,7 +936,7 @@ this Mapping is implemented within the \texttt{astConvert} method of the
 Frame class. For instance:
 
 \begin{lstlisting}
-my_frameset = frame1.convert( frame2 )
+my_frameset = frame1.convert(frame2)
 \end{lstlisting}
 
 will, if possible, generate a Mapping from \texttt{frame1} to
@@ -955,7 +954,7 @@ import starlink.Ast as Ast
 #  Create a Frame describing helio-centric
 #  Radio Velocity in units of km/s, with a rest
 #  frequency of 345.8 GHz.
-frame1 = Ast.SpecFrame( "System=VRAD,RestFreq=345.8" )
+frame1 = Ast.SpecFrame("System=VRAD,RestFreq=345.8")
 
 #  Create a deep copy, and change the attributes
 #  so that the copy describes frequency units of
@@ -968,8 +967,7 @@ frame2.StdOfRest = "LSR"
 
 #  Create a FrameSet that contains the Mapping
 #  between these two spectral coordinate systems.
-my_frameset = frame1.convert( frame2 )
-
+my_frameset = frame1.convert(frame2)
 \end{lstlisting}
 
 The principle that each class of Frame contains all the meta-data and
@@ -1320,9 +1318,9 @@ properties and then used as a ``template'' to search a FrameSet:
 
 \begin{lstlisting}
 template = Ast.SkyFrame()
-result = frameset.convert( template )
+result = frameset.convert(template)
 if result is None:
-  print( "No celestial coord system found" )
+  print("No celestial coord system found")
 \end{lstlisting}
 
 In this example \texttt{frameset} is searched for a SkyFrame. If found, a
@@ -1459,13 +1457,13 @@ format specific to AST.
 As an example, the following Python code:
 
 \begin{lstlisting}
-   map1 = starlink.Ast.PermMap( [3,1],
-                             [2,-1,1], 12.2 )
-   map2 = starlink.Ast.ZoomMap( 3, 4.0 )
-   cmpmap = starlink.Ast.CmpMap( map1, map2 )
+map1 = starlink.Ast.PermMap([3,1],
+                            [2,-1,1], 12.2)
+map2 = starlink.Ast.ZoomMap(3, 4.0)
+cmpmap = starlink.Ast.CmpMap(map1, map2)
 
-   channel = Ast.Channel()
-   channel.write( cmpmap )
+channel = Ast.Channel()
+channel.write(cmpmap)
 \end{lstlisting}
 
 produces the following output\footnote{Within the Python interface, the
