@@ -150,10 +150,10 @@
 In view of increased interest in object-oriented systems for describing
 coordinate information, we present a description of the data model used
 by the Starlink AST library. AST provides a comprehensive range of
-facilities for attaching world co-ordinate systems to astronomical data,
-for retrieving and interpreting that information in a variety of
-formats, including FITS-WCS. AST is a mature system that has been in use
-for more than 20 years, and may consequently be useful as a means of
+facilities for attaching world co-ordinate systems to astronomical data,
+and for retrieving and interpreting that information in a variety of
+formats, including FITS-WCS. AST is a mature system that has been in use
+for more than 17 years, and may consequently be useful as a means of
 informing development of similar systems in the future.
 \end{abstract}
 
@@ -197,9 +197,10 @@ coordinate systems. Whilst written in C, it has bindings for several
 other languages including Python, Java, Perl and Fortran. It has
 specialised support for many of the coordinate systems and projections
 commonly used to describe astronomical World Coordinate Systems (WCS),
-including all those described by the FITS-WCS standard, plus various
-popular distortion schemes currently in use. However, it is not limited
-to WCS, and may be used in any situation requiring transformation between
+including all the celestial and spectral coordinate systems described by
+the FITS-WCS standard \citep{FITSWCSI,FITSWCSII,FITSWCSIII}, plus various
+popular distortion schemes currently in use. However, it is not limited to
+WCS, and may be used in any situation requiring transformation between
 different coordinate systems.
 
 Unlike FITS-WCS, which supports only a relatively small set of prescribed
@@ -210,14 +211,15 @@ wider range of transformations to be
 described than is possible using FITS-WCS, and so can accommodate a wider
 range of data storage forms without the need to re-grid the data.
 
-AST was released internally in 1997 \cite[][included in ``Twenty Years of
+AST was released in 1998 \cite[][included in ``Twenty Years of
 ADASS'' \nocite{adass20}]{1998ASPC..145...41W}. Since then it has been in
 continuous use within the Starlink Software Collection \citep[][\ascl{1110.012}]{2014ASPC..485..391C}
 and is also used by various other major astronomical software tools such as
 DS9 \citep[][\ascl{0003.002}]{2003ASPC..295..489J}. Interest in flexible schemes for representing
 inter-related coordinate systems has increased recently\footnote{For
 instance, in the discussions about possible successors to the FITS format \citep{2015Mink},
-and within the Astropy project \citep{2013A&A...558A..33A}}, and so it seems an appropriate time to
+and within the Astropy \citep{2013A&A...558A..33A} and International
+Virtual Observatory Alliance (IVOA) projects.}, and so it seems an appropriate time to
 review the lessons learned from AST.
 
 This paper first presents an account of the historical issues that drove
@@ -236,8 +238,7 @@ Project was designing its NDF data format for gridded astronomical
 data \citep{2015Jenness}. There was clearly a need to relate positions
 within gridded data, using coordinates based on pixel indices, to
 real-world positions on the sky, wavelengths in a spectrum and so
-on. These non-pixel coordinate systems are now generally known as
-world coordinate systems.
+on.
 
 Calibration of spectra, for example, was commonly performed by fitting
 a polynomial to express wavelength as a function of pixel position and
@@ -366,7 +367,7 @@ gridded astronomical data sets.
 
 Ultimately, \textsc{transform} turned out not to be a full solution to
 the WCS problem and did not become part of the NDF data
-format\footnote{Although it it was the precursor of the
+format\footnote{Although it was the precursor of the
   \texttt{MathMap} class in AST.}. It was, however, used for two
 initially unforeseen purposes which turned out to be very significant:
 
@@ -511,7 +512,7 @@ that it uses. At the time, this was seen as something of an advantage.
 The library is intended for data interchange and creating new
 sub-classes would inevitably allow persistent objects to be created
 that other users could not access. However, with hind-sight a more open
-architecture may have encouraged involvement from a wider user-base.
+architecture may have encouraged involvement from a wider user-base
 \footnote{For Mappings, where this
   issue is most relevant, the problem has been mitigated in a
   controlled way by the IntraMap class that allows separately-compiled
@@ -610,7 +611,7 @@ determined by the nature of the transformation from pixel coordinates to
 (RA,Dec) coordinates, rather than being an intrinsic property of the (RA,Dec)
 coordinate system itself.
 
-The two base classes, \emph{Mapping} and \emph{Frame}, are extended
+The two classes, \emph{Mapping} and \emph{Frame}, are extended
 to create a wide variety of sub-classes, each of which describes a
 specific form of transformation or coordinate system. New sub-classes can
 be added as required and slot naturally into the existing
@@ -797,7 +798,7 @@ accomplished simply by creating a Mapping that describes each new
 transformation and concatenating it with the existing pixel to world
 coordinate mapping by creating a new CmpMap (see section~\ref{sec:cmpmap}).
 
-However, by itself this can lead to Mappings that becoming increasingly
+However, by itself this can lead to Mappings that become increasingly
 complex as transformations are stacked on top of each other. This is
 a problem because it leads to:
 
@@ -882,7 +883,7 @@ space such as ``time'', ``the sky'', ``the electro-magnetic spectrum'',
 general be described using any one of several coordinate systems. For
 instance, any position on the sky can be described using ICRS
 coordinates, Galactic coordinates, \emph{etc}. Similarly, positions in
-the eletro-magnetic spectrum can be described using frequency,
+the electro-magnetic spectrum can be described using frequency,
 wavelength, velocity, \emph{etc}.
 
 Each subclass of Frame represents a specific domain with a domain name (a
@@ -928,7 +929,7 @@ frame2.System = "Galactic"
 \subsubsection{Coordinate Conversion within Domains}
 \label{sec:domConversion}
 Given the two SkyFrames from the example in the previous section, it is
-possible to create a Mapping between them (\emph{i.e.} from FK5 (RA,Dec)
+possible to create a Mapping between them (\emph{i.e.} from ICRS (RA,Dec)
 to Galactic (l,b)) based on the meta-data stored within the two
 SkyFrames. This Mapping can then be used to convert (RA,Dec) positions
 into equivalent (l,b) positions, or vice-versa. The process of creating
@@ -936,7 +937,7 @@ this Mapping is implemented within the \texttt{astConvert} method of the
 Frame class. For instance:
 
 \begin{lstlisting}
-my_frameset = frame1.convert(frame2)
+my_frameset = frame1.convert( frame2 )
 \end{lstlisting}
 
 will, if possible, generate a Mapping from \texttt{frame1} to
@@ -949,7 +950,6 @@ accounting for rest frequency, standard of rest, celestial reference position,
 \emph{etc.}, as in the following example:
 
 \begin{lstlisting}
-import starlink.Ast as Ast
 
 #  Create a Frame describing helio-centric
 #  Radio Velocity in units of km/s, with a rest
@@ -973,7 +973,7 @@ my_frameset = frame1.convert(frame2)
 The principle that each class of Frame contains all the meta-data and
 intelligence required to create a Mapping between any two coordinate
 systems within the Frame's domain, extends to compound Frames as well as
-atomic Frames, as described in the next section.
+atomic Frames, as described in section~\ref{sec:comConversion}.
 
 The base Frame class itself is slightly unusual in that it can be used to
 describe any generic domain, and is restricted to a single Cartesian
@@ -1031,10 +1031,11 @@ with a SpecFrame.
 \end{description}
 
 \subsubsection{Coordinate Conversion within Compound Domains}
+\label{sec:comConversion}
 The principle that Frame classes contain all the information necessary to
 convert between any coordinate systems within their domain also applies
 to compound Frames and the compound domains that they represent. This
-facility is accessed through the astConvert method, as with atomic Frames
+facility is accessed through the \texttt{astConvert} method, as with atomic Frames
 (see section~\ref{sec:domConversion}).
 
 With atomic Frames, conversion is only possible between instances of the
@@ -1277,27 +1278,15 @@ described by the new current Frame (i.e., Galactic coordinates).
 However, the above process is quite involved and prone to error, and so
 the FrameSet class itself provides generalised ``integrity restoration''
 along the same lines, meaning that client code is relieved of the
-responsibility. Whenever any change is made to the current Frame within a
-FrameSet, the FrameSet class first takes a copy of the original Frame and
-makes the requested change to the copy. It then uses the \texttt{astConvert}
-method to generate a Mapping from the old Frame to the modified copy. It
-then adds the modified copy into the FrameSet, using the Mapping returned
-by \emph{Convert} to connect it the original unmodified Frame. It finally
-removes the original original Frame.
+responsibility.
 
 In summary, the integrity restoration system within the FrameSet class
-means that whenever the properties of the current Frame are changed within a
-FrameSet, the Mappings within the FrameSet are automatically modified
-accordingly.
-
-However there are times when this may not be what is wanted. For
-instance, if a mistake is made when setting the properties of a Frame
-prior to adding it into a FrameSet, then it should be possible to correct
-those mistakes without causing changes to be made to the Mappings within
-the FrameSet. This is possible by first getting a reference to the Frame,
-and then changing the Frame properties using that Frame reference, rather
-than the original FrameSet reference. Integrity restoration only occurs
-when the current Frame properties are changed via a FrameSet reference.
+means that whenever the properties of the current Frame are changed via a
+FrameSet reference, the Mappings within the FrameSet are automatically
+modified accordingly. However, this mechanism may be circumvented when
+necessary by first obtaining a direct reference to an internal Frame
+within the FrameSet and making the changes via this reference. In this
+case, the Mappings within the FrameSet are left unchanged.
 
 \subsubsection{Searching a FrameSet for a Frame with Required Properties}
 As described earlier, the \texttt{astConvert} method defined by the Frame
@@ -1378,32 +1367,34 @@ processing because of the overhead of packing and unpacking the object.
 
 Other sub-classes of Region attach different semantics to the set of
 positions enclosed. For example, there are sub-classes to represent
-circles, ellipses, boxes, polygons. etc., where the enclosed positions
+circles, ellipses, boxes, polygons, \emph{etc.}, where the enclosed positions
 may be fixed in number and define the Region's shape (the centre and one
 corner of a box, for example). These classes divide the Frame's domain
 into an ``inside'' and an ``outside'' and, as the ``Region'' name suggests,
-they are used to represent regions (intervals, areas, volumes, etc.)
-within domains. A negation method is provided that interchanges the
-inside and outside of a Region. Separate Regions may also be combined in
-pairs using boolean operations (AND, OR or XOR) and the CmpRegion class
-(which is analogous to the CmpMap and CmpFrame classes described
-elsewhere). This allows Regions of arbitrary complexity to be built out
-of simple components.
+they are used to represent regions (intervals, areas, volumes, \emph{etc.})
+within domains.
 
-The significance of the ``inside'' and ``outside'' of a Region lies in its
-use as a Mapping, whose properties it inherits via the Frame class.
-Typically, a Region will map positions that lie inside it without change,
-but positions that lie outside are mapped to a special null value. This
-provides a test of whether a point is inside or outside a Region. A Prism
-class is also provided that allows Regions to be extruded into extra
-dimensions. For example, a 4-dimensional Prism can be formed by extruding
-a 2-dimensional Circle and a 2-dimensional Box. A 4-dimensional position
-is then regarded as inside the Prism if it lies inside the Circle on axes
-1 and 2 and inside the Box on axes 3 and 4.
+A negation method is provided that interchanges the inside and outside of
+a Region. Separate Regions may also be combined in pairs using boolean
+operations (AND, OR or XOR) and the CmpRegion class (which is analogous
+to the CmpMap and CmpFrame classes described elsewhere). This allows
+Regions of arbitrary complexity to be built out of simple components. A
+Prism class is also provided that allows Regions to be extruded into
+extra dimensions. For example, a 4-dimensional Prism can be formed by
+extruding a 2-dimensional Circle and a 2-dimensional Box. A 4-dimensional
+position is then regarded as inside the Prism if it lies inside the
+Circle on axes 1 and 2 and inside the Box on axes 3 and 4.
+
+The significance of the ``inside'' and ``outside'' of a Region lies in
+its use as a Mapping, from which it also inherits. Typically, a Region
+will map positions that lie inside it without change, but positions that
+lie outside are mapped to a special null value. This provides a test of
+whether a point is inside or outside a Region.
 
 When combining Regions, it is not necessary for the coordinate systems
 represented by their enclosed Frames to be the same, but it must be
-possible to convert between them. If they differ, the astConvert method
+possible to convert between them. If they differ, the \texttt{astConvert}
+method
 will be used to refer them both to a common coordinate system. Integrity
 restoration also means that any changes to a Region's Frame that changes
 the coordinate system will transform the boundary between the inside and
@@ -1441,12 +1432,11 @@ limiting the extent of drawing operations.
 \section{Serialisation, and FITS-WCS}
 AST includes a set of \emph{Channel} classes, which allow AST objects to
 be serialised in various ways for persistent external storage. The basic
-Channel class has a method that converts an in-memory AST object into a set
-of text strings. By default
-these text strings are simply written to standard output, but an external
-``sink'' function can be supplied to the Channel constructor which --- if
-supplied --- will be called by the Channel class to store each text
-string in some associated external store. The Channel class has another
+Channel class has a method that converts an in-memory AST object into a
+set of text strings. By default these text strings are simply written to
+standard output, but an external ``sink'' function can be supplied to the
+Channel constructor in order to redirect the text to some external data
+store. The Channel class has another
 method that does the inverse --- it calls a supplied ``source''
 function to read a set of text strings from an external store, and then
 creates an in-memory AST object from the text strings. A round-trip
@@ -1551,9 +1541,10 @@ To handle this, a FitsChan contains a buffer which may be loaded with
 FITS header cards, normally read directly from a data file. The FitsChan
 analyses these cards, determines how any contained WCS information has
 been stored and makes this available through its ``Encoding'' attribute.
-This takes values such as ``FITS-WCS'', ``FITS-IRAF'', ``NATIVE '', etc. to
+This takes values such as ``FITS-WCS'', ``FITS-IRAF'', ``NATIVE '',
+\emph{etc.} to
 indicate which convention has been used to store the information. A
-subsequent call to the FitsChan's astRead method will then perform a
+subsequent call to the FitsChan's \texttt{astRead} method will then perform a
 ``destructive read'' on the buffer of FITS cards. This reads the AST object
 that they describe and then deletes all the relevant FITS cards. The
 method returns a FrameSet which holds the WCS information (see
@@ -1562,18 +1553,19 @@ removed from the FITS header buffer, leaving it clear for new WCS
 information to be written without the possibility of any keyword clashes.
 
 To write a FrameSet\footnote{A FrameSet is the only valid object that
-can be written to a FitsChan.} to a FITS header, a FitsChan's astWrite
+can be written to a FitsChan.} to a FITS header, a FitsChan's
+\texttt{astWrite}
 method is used. This uses the ``Encoding'' attribute to determine which
 FITS header convention to use and then adds the resulting FITS header
 cards to the FitsChan buffer, from where they may be transferred to an
 output file. If changes have been made to a FrameSet such that it cannot
-be stored using the chosen FITS encoding, then the astWrite method will
+be stored using the chosen FITS encoding, then the \texttt{astWrite} method will
 fail. AST will go to some lengths to simplify the information so that it
 is compatible with the data model of the selected encoding, but that is
 not always possible. In such cases, an alternative encoding can be chosen
 simply by modifying the ``Encoding'' attribute of the FitsChan.
 
-4.1.2 The STC-S Encoding
+\subsubsection{The STC-S Encoding}
 The StcsChan class provides an interface between AST and space-time
 metadata from a subset of the ``STC-S'' scheme \citep{STC} developed by the
 International Virtual Observatory Alliance (IVOA). This allows AST
@@ -1581,8 +1573,6 @@ Region objects to be converted to and from textual descriptions that
 use the STC-S conventions .
 
 \section{Fields of Application}
-This section describes some of the ways in which AST can be used.
-
 Whilst the AST library provides many facilities that are useful when
 describing and using the WCS information attached to a data array, it
 is not limited to that field. Its generalised design enables it to be used
@@ -1644,7 +1634,7 @@ following sections).
 
 \subsubsection{Two Dimensional Plotting}
 A \emph{Plot} is a subclass of FrameSet and can therefore be considered
-to be a FrameSet `with some extra facilities''. A Plot does not represent
+to be a FrameSet ``with some extra facilities''. A Plot does not represent
 the graphical content itself, but is a route through which plotting
 operations, such as drawing lines and curves, are conveyed on to a
 plotting surface to appear as visible graphics.
@@ -1668,7 +1658,7 @@ have a current Frame that describes (RA,Dec) positions on the sky.
 When a Plot is created, an existing FrameSet is supplied together with
 the bounds of a box within its base Frame (typically image pixel
 coordinates). A Mapping (either linear or logarithmic) is created that
-maps this box onto a specified area within the graphics coordinates
+maps this box onto a specified area within the graphics coordinate
 systems. The Plot constructor then initialises the new Plot to be a copy
 of the supplied FrameSet, and adds in a new Frame describing the graphics
 coordinates system, using the above Mapping to connect the new Frame to
@@ -1725,7 +1715,7 @@ The projection from 3-dimensional graphics coordinates onto a
 package. This may be surprising, given that AST could itself handle this
 sort of projection. But the decision was taken so that Plot3D graphics
 wrapper functions could use the full range of features offered by a
-dedicated 3-dimensional plotting packages, rather than restrict it to the
+dedicated 3-dimensional plotting package, rather than restrict it to the
 more limited features offered by a typical 2-dimensional package.
 
 Fig.~\ref{fig:3dplot} shows an example of the 3-dimensional annotated axes
@@ -1754,7 +1744,7 @@ data point. A position within some N-dimensional space is specified by a
 set of N axis values. Likewise, a value can also be represented by a set
 of axis values. In the majority of common cases data values are
 1-dimensional - for instance a temperature, or a sky brightness. But
-there are also some common multi-dimensional cases such as Stokes vector
+there are also some common multi-dimensional cases such as a Stokes vector
 $(I,~Q,~U,~V)$.
 
 The functional division into Mappings, Frames and FrameSets  used
@@ -1875,7 +1865,7 @@ using a FrameSet whose base Frame corresponds with the underlying data
 elements (e.g. pixels), then alignment involves finding a transformation
 between the base Frames of the two FrameSets involved.
 
-This operation is performed using the astConvert method introduced in
+This operation is performed using the \texttt{astConvert} method introduced in
 section~\ref{sec:domConversion}, whose role is to find a transformation
 between the coordinate systems represented by two Frames. Because
 FrameSets are also Frames, astConvert may be used to convert between two
@@ -1953,7 +1943,10 @@ constantly increasing in size, and transforming every pixel position
 within a large data set using a long and complicated transformation can
 be an expensive operation. The AST methods divide the input data set in
 half along each axis, and find a linear approximation to the Mapping
-over each resulting quadrant. If one of these approximations meets a
+over each resulting quadrant\footnote{The word ``quadrant'' is used here
+for clarity but does not imply a restriction to two dimensions. The
+algorithm itself can operate in any number of dimensions.}. If one of
+these approximations meets a
 user-specified accuracy, the approximation is used to transform all pixel positions
 within its quadrant. Any quadrants that do not meet the accuracy
 requirements are subdivided again and new approximations are found
@@ -1961,7 +1954,6 @@ for each of the new sub-quadrants. This process repeats recursively until
 the sub-quadrants become so small that there is likely to be little
 time-saving in sub-dividing them any further. At this point the full
 transformation is used on all pixels within any such sub-quadrants.
-
 
 \section{Things we Would do Differently Now}
 
@@ -1974,6 +1966,11 @@ different now --- C++ is much more mature with greater standardisation.
 For that reason we would choose C++ over C if starting AST development
 now\footnote{Writing in higher level languages such as Java or Python would make
 it more difficult to write interfaces for other languages.}.
+
+The distinction between C and C++, of course, only affects the way that the
+class interfaces are implemented and does not impact on the AST data model
+nor, indeed, on the majority of the AST code. Consequently, converting AST
+to use C++ would not necessarily involve a major re-write.
 
 \subsection{Architecture}
 
@@ -2001,7 +1998,7 @@ sometimes require quad precision.
 The distinction between a coordinate system and a domain has caused
 confusion and misunderstandings on several occasions. Coordinate systems are
 mathematical abstractions of various types (Cartesian, polar, \emph{etc}).
-Coordinate system are used to describe positions within a physical space
+Coordinate systems are used to describe positions within a physical space
 (\emph{i.e.} a domain). In this sense a domain can encapsulate several
 alternative coordinate systems, any of which can be used to describe positions
 in the domain. With hind-sight, it may have been useful to make this
@@ -2010,8 +2007,18 @@ different classes.
 
 \subsection{Angle units}
 
-Our decision to use radians rather than degrees to represent angle values
-has proved unpopular.
+Our decision to use radians rather than degrees to represent angle on the
+sky has proved unpopular.
+
+Normally, allowing the use of different units for angles would be
+straightforward given AST's ability to convert between equivalent units.
+However, the SkyFrame class was implemented long before unit conversion
+was added to the library and in a manner that conflated unit conversion
+with formatting (through the use of format strings such as
+``\texttt{hh:mm:ss}'').
+This, unfortunately, leaves the SkyFrame class unable to benefit from
+automatic unit conversion. This is an area of some subtlety that future
+designs would do well to consider carefully.
 
 \section{The AST library}
 
@@ -2021,18 +2028,18 @@ The AST library has been developed over a number of years
   WCSLIB \citep[][\ascl{1108.003}]{2006ASPC..351..591C}, PAL \citep{2013ASPC..475..307J}
   and SOFA \citep[][\ascl{1403.026}]{2011SchpJ...611404H} but does not depend on those
   libraries. There are language bindings for Fortran, Java, Perl and
-  Python.
+  Python. The
+source code for the AST library is open-source using the GNU Lesser General
+Public License and is available
+online\footnote{\url{https://github.com/Starlink/starlink}}.
+
 
 \section{Acknowledgements}
 
 This work was funded by the Council for the Central Laboratory of the
 Research Councils and subsequently by the Science and Technology
 Facilities Council.  The AST library and the related Starlink software
-are currently maintained by the East Asian Observatory, Hawaii. The
-source code for the AST library is open-source using the GNU Lesser General
-Public License and is available
-online\footnote{\url{https://github.com/Starlink/starlink}}.
-
+are currently maintained by the East Asian Observatory, Hawaii.
 
 
 %% References
