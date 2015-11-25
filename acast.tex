@@ -212,7 +212,7 @@ described than is possible using FITS-WCS, and so can accommodate a wider
 range of data storage forms without the need to re-grid the data.
 
 AST was released in 1998 \cite[][included in ``Twenty Years of
-ADASS'' \nocite{adass20}]{1998ASPC..145...41W}. Since then it has been in
+ADASS''; \citet{adass20}]{1998ASPC..145...41W}. Since then it has been in
 continuous use within the Starlink Software Collection \citep[][\ascl{1110.012}]{2014ASPC..485..391C}
 and is also used by various other major astronomical software tools such as
 DS9 \citep[][\ascl{0003.002}]{2003ASPC..295..489J}.
@@ -458,7 +458,7 @@ also emerged:
 At about the same time, the wider FITS community also came to recognise
 some of the limitations of WCS handling within FITS, and in 1992 work commenced
 on a new standard for storing WCS information within FITS files. However,
-in view of the ``once FITS, always FITS'' principle \citep[see e.g.][]{1997ASPC..125..257W}, that work consisted
+in view of the ``once FITS, always FITS'' principle \citep[see \emph{e.g.},][]{1997ASPC..125..257W}, that work consisted
 mainly in formalising and extending existing practices. So for instance, new
 keywords were defined to store the extra meta-data needed for a complete
 description of a celestial coordinate system, and new projection types were
@@ -586,7 +586,7 @@ output space need not be the same as that of the input space.}.
 A \emph{coordinate system} is a collection of meta-data describing a set of
 one or more axes. This will include:
 \begin{itemize}
-\item the number of axes (i.e., dimensionality of the space)
+\item the number of axes (\emph{i.e.}, dimensionality of the space)
 \item the physical quantity described by each axis
 \item the units used by each axis
 \item the geometry of the space that they describe (flat, spherical,
@@ -785,7 +785,7 @@ Regions contained within the SelectorMap.
 
 There are a wide range of possible transformations that could
 potentially be applied to a data set during analysis. These
-including simple things such as rotation, scaling, shear, \emph{etc}., but
+include simple things such as rotation, scaling, shear, \emph{etc}., but
 could in principle include more complex transformations such as
 re-projection, dis-continuous ``patchwork'' transformations, or even
 transformation using a general algebraic expression.  A coordinate
@@ -932,8 +932,8 @@ frame2.System = "Galactic"
 \subsubsection{Coordinate Conversion within Domains}
 \label{sec:domConversion}
 Given the two SkyFrames from the example in the previous section, it is
-possible to create a Mapping between them (\emph{i.e.} from ICRS (RA,Dec)
-to Galactic (l,b)) based on the meta-data stored within the two
+possible to create a Mapping between them (\emph{i.e.}, from ICRS (RA,Dec)
+to Galactic ($\ell,b$)) based on the meta-data stored within the two
 SkyFrames. This Mapping can then be used to convert (RA,Dec) positions
 into equivalent (l,b) positions, or vice-versa. The process of creating
 this Mapping is implemented within the \texttt{astConvert} method of the
@@ -1042,7 +1042,7 @@ facility is accessed through the \texttt{astConvert} method, as with atomic Fram
 (see section~\ref{sec:domConversion}).
 
 With atomic Frames, conversion is only possible between instances of the
-same Frame class (i.e. Frames that represent alternative coordinate
+same Frame class (\emph{i.e.}, Frames that represent alternative coordinate
 systems within the same physical domain). However, with a compound Frame
 containing (say) two sub-components, it may be possible to find a
 conversion to either or both of the two sub-Frames, so that a new range
@@ -1053,8 +1053,8 @@ following:
 \begin{itemize}
 \item Another CmpFrame describing the SKY-SPECTRUM domain.
 \item Another CmpFrame describing the SPECTRUM-SKY domain.
-\item A SkyFrame (i.e., a Frame describing the SKY domain).
-\item A SpecFrame (i.e., a Frame describing the SPECTRUM domain).
+\item A SkyFrame (\emph{i.e.}, a Frame describing the SKY domain).
+\item A SpecFrame (\emph{i.e.}, a Frame describing the SPECTRUM domain).
 \end{itemize}
 
 where a ``match'' means that conversion is possible. If the destination
@@ -1068,7 +1068,7 @@ the facility has great power and can form the basis of a search function
 for coordinate systems. For instance, if a general purpose program reads
 the WCS from a data file of arbitrary dimensionality and wants to ask the
 question ``can I determine the ICRS (RA,Dec) of each pixel position?'' it
-can create a SkyFrame describing ICRS (RA,dec) and then use the
+can create a SkyFrame describing ICRS (RA,Dec) and then use the
 \texttt{astConvert} method to see if a Mapping can be created from the
 WCS Frame read from the data file to the \emph{template} SkyFrame
 describing the required coordinate system. This will allow ICRS (RA,Dec)
@@ -1080,7 +1080,7 @@ file that contains a pair of celestial coordinate axes.
 A primary goal of AST is to support high-level software that can process
 arbitrary coordinate systems without needing to know their details. This
 simplifies the high-level algorithms themselves and also allows them to
-benefit from later additions to the AST library (\emph{e.g.} new coordinate
+benefit from later additions to the AST library (\emph{e.g.}, new coordinate
 systems and domains) that did not exist when they were originally
 written. The object-oriented design of AST is key to this feature and it
 particularly affects the Frame classes.
@@ -1117,7 +1117,7 @@ applies to any class of Frame. This finds particular use during graphical
 operations (see section~\ref{sec:plotting}).
 
 A related method defined by the base Frame class will wrap axis values
-into a standard range (\emph{e.g.} 0 to 360 degrees) where appropriate.
+into a standard range (\emph{e.g.}, 0 to 360 degrees) where appropriate.
 This can be useful when reading and writing axis values, but also
 provides a simple way to characterise the different topologies of (say)
 flat, cylindrical and spherical spaces. A further method will return the
@@ -1142,7 +1142,7 @@ the type of Frame involved.
 
 Converting between different coordinate systems within the same domain is
 handled by Frame and its sub-classes. However, converting between
-different domains (\emph{e.g.} between pixel coordinates and sky coordinates) is
+different domains (\emph{e.g.}, between pixel coordinates and sky coordinates) is
 not possible in this way because there is no intrinsic relationship
 between the two domains unless extra information is supplied. This extra
 information typically describes experimental configurations; for example
@@ -1252,7 +1252,7 @@ the current Frame, connected together by a suitable Mapping. It is
 clearly possible to break the integrity of such a FrameSet, such that the
 Mapping no longer accurately describes the transformation from pixel
 coordinates to world coordinates. One obvious way in which this could be
-done is to change the current Frame so that it describes, say, galactic
+done is to change the current Frame so that it describes, say, Galactic
 coordinates rather than (RA,Dec). The Mapping is left unchanged and so will
 still generate (RA,Dec) values, even though the FrameSet now claims that
 these are galactic coordinates\footnote{Note, Mappings are immutable and so the
@@ -1264,7 +1264,7 @@ values rather than (RA,Dec) values. One way in which this could be done is as
 follows, starting from the original unmodified FrameSet:
 
 \begin{enumerate}
-\item Create a copy of the current Frame (i.e., the (RA,Dec) Frame), and
+\item Create a copy of the current Frame (\emph{i.e.}, the (RA,Dec) Frame), and
 change the attributes of the copy so that it describes Galactic
 coordinates.
 \item Use the \texttt{astConvert} method on the (RA,Dec) Frame to generate a
@@ -1276,7 +1276,7 @@ above Mapping to connect it to the existing (RA,Dec) Frame.
 
 The final FrameSet is unchanged in the sense that it still contains two
 Frames, but now the Mapping that connects them correctly generates the values
-described by the new current Frame (i.e., Galactic coordinates).
+described by the new current Frame (\emph{i.e.}, Galactic coordinates).
 
 However, the above process is quite involved and prone to error, and so
 the FrameSet class itself provides generalised ``integrity restoration''
@@ -1516,7 +1516,7 @@ the more obscure features of some formats may not all be supported.
 \subsubsection{FITS Encodings}
 \label{sec:fitsencodings}
 There are a number of conventions (unrelated to AST) for storing WCS
-information in FITS header cards and the rules governing their use is
+information in FITS header cards and the rules governing their use are
 complex. Most programmers are unlikely to understand these technical
 details, so AST wraps them up in a simple high-level model provided by
 the FitsChan class. This provides a read/write interface between AST
@@ -1526,7 +1526,7 @@ objects and FITS header cards (where each card represents a
 The FitsChan class currently provides support for almost all of papers
 I, II and III  in the FITS-WCS series \citep{FITSWCSI,FITSWCSII,FITSWCSIII}
 \footnote{Support for the tabular format associated with the ``-TAB'' code
-described in FITS-WCS paper III is limited to 1-dimensional(\emph{i.e.}
+described in FITS-WCS paper III is limited to 1-dimensional(\emph{i.e.},
 separable) axes.}. As yet it does not provide support for converting
 between the AST TimeFrame class and the FITS-WCS description of time
 axes \citep{FITSWCSIV}. It also supports a variety of unofficial encodings
@@ -1778,11 +1778,11 @@ same frequency or wavelength (specified by an attribute of the FluxFrame).
 Thus this class is more appropriate for use with images than spectra.
 
 \item[Frame :] The basic Frame class can be used to represent
-single-system data value axes (\emph{i.e.} Frames that know only one
+single-system data value axes (\emph{i.e.}, Frames that know only one
 system for specifying positions within its domain), using any suitable
 system of units. Such Frames can be used to convert axis values into any
 dimensionally equivalent set of units. For instance, a basic Frame used
-to represent stellar mass could be set to use Kg, Solar mass,
+to represent stellar mass could be set to use kg, Solar mass,
 \emph{etc.} as its units, and will automatically modify the associated
 Mappings each time the units are changed (assuming the Frame is part of
 a FrameSet).
@@ -1806,7 +1806,7 @@ and used within a single FrameSet, assuming that the Mappings between
 such Frames have been set up and incorporated into the FrameSet correctly.
 
 The following sections describe just a few of the more common WCS
-operations that may be achieved using AST:
+operations that may be achieved using AST.
 
 \subsubsection{Validating WCS}
 The generalised description of WCS provided by AST makes it possible
@@ -1814,7 +1814,7 @@ to write applications in a domain-agnostic manner. For instance, an
 application that uses WCS to align two data sets need not know whether the
 data sets are two-dimensional images of the sky, one dimensional spectra,
 3-dimensional time-space cubes, \emph{etc}. However, this will not always
-be possible, and it will still often be the case that an applications needs
+be possible, and it will still often be the case that an application needs
 to check that the WCS in the supplied data is consistent with the
 specific requirements of the application. The \texttt{astFindFrame} method can
 often be used for this purpose. The application creates a Frame that acts
@@ -1865,13 +1865,13 @@ can be identified. This process can be considered one of alignment. For
 example, in the case of images of the sky, we may wish to align them
 prior to combining them into a mosaic. If each dataset is calibrated
 using a FrameSet whose base Frame corresponds with the underlying data
-elements (e.g. pixels), then alignment involves finding a transformation
+elements (\emph{e.g.}, pixels), then alignment involves finding a transformation
 between the base Frames of the two FrameSets involved.
 
 This operation is performed using the \texttt{astConvert} method introduced in
 section~\ref{sec:domConversion}, whose role is to find a transformation
 between the coordinate systems represented by two Frames. Because
-FrameSets are also Frames, astConvert may be used to convert between two
+FrameSets are also Frames, \texttt{astConvert} may be used to convert between two
 FrameSets. In this case, however, there is a choice of how to find a
 transformation between the two Frames that they represent (their current
 Frames). This is because links between two FrameSets can potentially be
@@ -1924,7 +1924,7 @@ For instance, if an application rotates an input image to create an
 output image, the application should create a 2-dimensional MatrixMap to
 describe the rotation\footnote{A pair of ShiftMaps will also be needed if
 the rotation is not around the pixel origin.} and then invoke
-astRemapFrame, supplying the MatrixMap and the WCS FrameSet from the
+\texttt{astRemapFrame}, supplying the MatrixMap and the WCS FrameSet from the
 input image. The modified FrameSet would then be stored in the output
 image.
 
@@ -2002,7 +2002,7 @@ The distinction between a coordinate system and a domain has caused
 confusion and misunderstandings on several occasions. Coordinate systems are
 mathematical abstractions of various types (Cartesian, polar, \emph{etc}).
 Coordinate systems are used to describe positions within a physical space
-(\emph{i.e.} a domain). In this sense a domain can encapsulate several
+(\emph{i.e.}, a domain). In this sense a domain can encapsulate several
 alternative coordinate systems, any of which can be used to describe positions
 in the domain. With hind-sight, it may have been useful to make this
 distinction clearer by separating coordinate systems and domains into
