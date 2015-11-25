@@ -1974,7 +1974,11 @@ our own infrastructure to support object-orientation. Things are
 different now --- C++ is much more mature with greater standardisation.
 For that reason we would choose C++ over C if starting AST development
 now\footnote{Writing in higher level languages such as Java or Python would make
-it more difficult to write interfaces for other languages.}.
+it more difficult to write interfaces for other languages. Conversely,
+lack of native Java implementation meant that it was impossible to use
+the AST library in TOPCAT
+\citep[][\ascl{1101.010}]{2005ASPC..347...29T}. A JNI interface was
+used in SPLAT-VO but that led to its own difficulties.}.
 
 The distinction between C and C++, of course, only affects the way that the
 class interfaces are implemented and does not impact on the AST data model
