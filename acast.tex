@@ -1985,20 +1985,37 @@ class interfaces are implemented and does not impact on the AST data model
 nor, indeed, on the majority of the AST code. Consequently, converting AST
 to use C++ would not necessarily involve a major re-write.
 
+However, using C as an implementation language did necessitate the AST
+public interface being wrapped in a set of macros. These were not used
+internally within the code and this resulted in a distinction between the
+public interface and the internals of AST, with clear differences in the
+way they are called. As a consequence, users of the public interface have
+found accessing the internals of AST to be challenging and this has made
+extending the system more difficult. Using C++ would have mitigated this
+as the language provides mechanisms for protecting internal interfaces in
+a more controlled manner. However, some of the features of the existing
+AST public interface - such as pointer validity checking and object
+scoping - could potentially be difficult to provide in C++.
+
 \subsection{Architecture}
 
-The current architecture of AST makes it difficult for non-Starlink
-developers to create optional extensions or plug-ins to AST that provide added
-value. This was seen initially as a positive feature that would
-encourage standardisation, and avoid proliferation of multiple incompatible
-versions of AST object format. However, with hind sight the monolithic
-nature of the library has turned out to be a barrier to wider adoption.
-Potential users often want to use only some small part of AST's wide
-functionality, and feel daunted by a large library and a fat document
-covering many things that are irrelevant to them. Also, the custom infra-structure
-used for object orientation within AST is often seen as hard to learn.
-Some simple and well documented means for an external library to use this
-infrastructure would have been useful.
+Packing the wide functionality of AST into a single monolithic
+library and a large document has sometimes proved to be a barrier to
+adoption. Potential users may want to use only a small part of the
+functionality available and feel daunted by a system that addresses
+many problems that are irrelevant to them.
+
+A more open and modular architecture consisting of a set of optional
+components together with a small set of of mandatory libraries
+providing the core functionality would probably have had wider appeal.
+For instance, the plotting and region classes within AST would have
+made good candidates for optional extensions.
+
+Such an architecture could also make it easier for extensions to be
+written by people and groups not directly involved with the
+development of the core functionality of AST\footnote{Writing AST in C++
+rather than C would also have made this easier, as noted in the previous
+section.}.
 
 \subsection{Floating-point precision}
 
