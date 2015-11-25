@@ -2038,7 +2038,11 @@ different classes.
 \subsection{Angle units}
 
 Our decision to use radians rather than degrees to represent angle on the
-sky has proved unpopular.
+sky has proved unpopular. The ubiquity of the FITS data format within the
+astronomical community has led to an expectation that other systems will
+follow the example of FITS and use degrees rather than radians to
+represent spherical coordinates. Failure to check the AST documentation on
+this point has been a common source of bugs within software that uses AST.
 
 Normally, allowing the use of different units for angles would be
 straightforward given AST's ability to convert between equivalent units.
