@@ -2017,6 +2017,21 @@ development of the core functionality of AST\footnote{Writing AST in C++
 rather than C would also have made this easier, as noted in the previous
 section.}.
 
+The problem remains, however, that persistent objects written by
+extensions to AST could not be handled by other AST installations that
+lack the necessary extra classes. This could seriously affect data
+portability. A framework that allowed AST to be extended by means of
+"plug-in" modules might be a solution, so that unrecognised data
+resulted in a message asking the user to install the required extra
+software. However, this adds considerable complexity and presents a
+further barrier to extending the system because developers must learn
+how to build the plug-in modules.
+
+This tension between extensibility and the portability of persistent
+data seems to be an inherent feature of OO design, despite its many
+other advantages. Currently, we are not aware of a good lightweight
+solution to the problem.
+
 \subsection{Floating-point precision}
 
 The restriction that all coordinate values are represented by
