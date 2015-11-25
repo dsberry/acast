@@ -215,7 +215,7 @@ AST was released in 1998 \cite[][included in ``Twenty Years of
 ADASS''; \citet{adass20}]{1998ASPC..145...41W}. Since then it has been in
 continuous use within the Starlink Software Collection \citep[][\ascl{1110.012}]{2014ASPC..485..391C}
 and is also used by various other major astronomical software tools such as
-DS9 \citep[][\ascl{0003.002}]{2003ASPC..295..489J}.
+DS9 \citep[][\ascl{0003.002}]{2003ASPC..295..489J} and SPLAT-VO \citep[][\ascl{1402.008}]{2014A&C.....7..108S}.
 Recent interest in flexible schemes for representing inter-related
 coordinate systems has increased recently.  For instance, in the
 discussions about possible successors to the FITS format
@@ -1531,7 +1531,9 @@ separable) axes.}. As yet it does not provide support for converting
 between the AST TimeFrame class and the FITS-WCS description of time
 axes \citep{FITSWCSIV}. It also supports a variety of unofficial encodings
 that have been devised by particular projects over many years, including
-several popular methods for describing focal plane distortion.
+several popular methods for describing focal plane distortion (such as
+Spitzer SIP \citep{2005ASPC..347..491S} and SCAMP  TAN/TPV
+\citep{2006ASPC..351..112B}).
 
 Normally, FITS headers do not simply hold WCS information; they also
 contain many additional cards describing other aspects of a dataset. Care
@@ -1573,7 +1575,11 @@ The StcsChan class provides an interface between AST and space-time
 metadata from a subset of the ``STC-S'' scheme \citep{STC} developed by the
 International Virtual Observatory Alliance (IVOA). This allows AST
 Region objects to be converted to and from textual descriptions that
-use the STC-S conventions .
+use the STC-S conventions, for example, converting the STC-S region
+descriptions stored in catalogs created by the CUPID application
+\citep[][\ascl{1311.007}]{2007ASPC..376..425B} and
+displaying the regions over images displayed in Starlink GAIA
+\citep{2010ASPC..434..213B}.
 
 \section{Fields of Application}
 Whilst the AST library provides many facilities that are useful when
