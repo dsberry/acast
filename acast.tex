@@ -216,9 +216,10 @@ ADASS''; \citet{adass20}]{1998ASPC..145...41W}. Since then it has been in
 continuous use within the Starlink Software Collection \citep[][\ascl{1110.012}]{2014ASPC..485..391C}
 and is also used by various other major astronomical software tools such as
 DS9 \citep[][\ascl{0003.002}]{2003ASPC..295..489J} and SPLAT-VO \citep[][\ascl{1402.008}]{2014A&C.....7..108S}.
-Recent interest in flexible schemes for representing inter-related
-coordinate systems has increased recently.  For instance, in the
-discussions about possible successors to the FITS format
+
+Interest in flexible schemes for representing inter-related coordinate
+systems has increased recently --- for instance, in the discussions
+about possible successors to the FITS format
 \citep{2015Mink,2015A&C....12..240G,2016Shortridge}, and within the
 Astropy \citep{2013A&A...558A..33A,P028_adassxxv} and International
 Virtual Observatory Alliance (IVOA) (STC2; Rots, in preparation)
@@ -901,7 +902,7 @@ domain) and has the domain name ``SKY''. It knows about a range of celestial
 coordinate systems that can be used to describe positions on the sky.
 However, an instance of the SkyFrame class represents only one of these
 celestial coordinate systems at a time. The particular one it represents is
-stored in its ``system'' attribute (an instance variable) which takes
+stored in its ``System'' attribute (an instance variable) which takes
 values such as ``ICRS'', ``FK5'', ``Galactic'', \emph{etc.}
 
 The SkyFrame class extends the Frame class by incorporating various other
@@ -912,7 +913,7 @@ observer's geodetic position.}. These are also instance variables and
 therefore specific to each SkyFrame instance. The coordinate system
 represented by an instance of the SkyFrame class can be changed at any time
 simply by assigning new values to any of the relevant attributes, as in
-the following Python examples:
+the following Python example:
 
 \begin{lstlisting}
 import starlink.Ast as Ast
@@ -940,7 +941,7 @@ this Mapping is implemented within the \texttt{astConvert} method of the
 Frame class. For instance:
 
 \begin{lstlisting}
-my_frameset = frame1.convert( frame2 )
+my_frameset = frame1.convert(frame2)
 \end{lstlisting}
 
 will, if possible, generate a Mapping from \texttt{frame1} to
@@ -1150,7 +1151,7 @@ where a telescope was pointing (or the settings of a spectrograph). Given
 this additional detail, it becomes possible to tie the two domains
 together, so that conversion can be performed between a pixel-based
 coordinate system and any celestial coordinate system (or wavelength
-system in the case of a spectrum) .
+system in the case of a spectrum).
 
 Linking domains together in this way essentially creates a ``super
 domain'' where otherwise unconnected coordinate systems are bound
@@ -1320,7 +1321,7 @@ new FrameSet is returned in which the base Frame is the matching Frame
 from \texttt{frameset}, the current Frame is a copy of \texttt{template} and
 the appropriate Mapping exists between them. In addition, the base Frame
 of \texttt{frameset} is set to indicate the matching Frame. If no matching
-Frame is found, a null reference is returned by \emph{Convert}.
+Frame is found, a null reference is returned by \emph{astConvert}.
 
 In the above example the specific celestial coordinate system represented
 by \texttt{template} was left unspecified when the SkyFrame was created.
@@ -1432,7 +1433,7 @@ intermediate space, or one devised purely for the purpose of clipping.
 These techniques find particular use in graphical applications for
 limiting the extent of drawing operations.
 
-\section{Serialisation, and FITS-WCS}
+\section{Serialisation and FITS-WCS}
 AST includes a set of \emph{Channel} classes, which allow AST objects to
 be serialised in various ways for persistent external storage. The basic
 Channel class has a method that converts an in-memory AST object into a
@@ -1450,10 +1451,10 @@ format specific to AST.
 As an example, the following Python code:
 
 \begin{lstlisting}
-map1 = starlink.Ast.PermMap([3,1],
-                            [2,-1,1], 12.2)
-map2 = starlink.Ast.ZoomMap(3, 4.0)
-cmpmap = starlink.Ast.CmpMap(map1, map2)
+map1 = Ast.PermMap([3,1],
+                   [2,-1,1], 12.2)
+map2 = Ast.ZoomMap(3, 4.0)
+cmpmap = Ast.CmpMap(map1, map2)
 
 channel = Ast.Channel()
 channel.write(cmpmap)
@@ -1526,7 +1527,7 @@ objects and FITS header cards (where each card represents a
 The FitsChan class currently provides support for almost all of papers
 I, II and III  in the FITS-WCS series \citep{FITSWCSI,FITSWCSII,FITSWCSIII}
 \footnote{Support for the tabular format associated with the ``-TAB'' code
-described in FITS-WCS paper III is limited to 1-dimensional(\emph{i.e.},
+described in FITS-WCS paper III is limited to 1-dimensional (\emph{i.e.},
 separable) axes.}. As yet it does not provide support for converting
 between the AST TimeFrame class and the FITS-WCS description of time
 axes \citep{FITSWCSIV}. It also supports a variety of unofficial encodings
@@ -1608,7 +1609,7 @@ underlying graphics package. For this purpose AST provides two classes ---
 
 \subsubsection{Use of External Plotting Packages}
 The plotting classes within AST do not themselves include any facilities
-for placing ``ink onto paper'' --- an external graphic library must be
+for placing ``ink on to paper'' --- an external graphic library must be
 supplied to draw graphical primitives such as straight lines, markers and
 character strings. The plotting classes within AST will then use the
 primitive facilities of this underlying graphics system to draw more complex
@@ -1667,8 +1668,8 @@ have a current Frame that describes (RA,Dec) positions on the sky.
 When a Plot is created, an existing FrameSet is supplied together with
 the bounds of a box within its base Frame (typically image pixel
 coordinates). A Mapping (either linear or logarithmic) is created that
-maps this box onto a specified area within the graphics coordinate
-systems. The Plot constructor then initialises the new Plot to be a copy
+maps this box on to a specified area within the graphics coordinate
+system. The Plot constructor then initialises the new Plot to be a copy
 of the supplied FrameSet, and adds in a new Frame describing the graphics
 coordinates system, using the above Mapping to connect the new Frame to
 the base Frame. This new Frame is then made the base Frame in the Plot.
@@ -1719,7 +1720,7 @@ represents the 3-dimensional Cartesian coordinate system used by the
 underlying 3-dimensional plotting package, and the current Frame
 represents 3-dimensional ``user'' coordinates.
 
-The projection from 3-dimensional graphics coordinates onto a
+The projection from 3-dimensional graphics coordinates on to a
 2-dimensional plotting surface is handled by the underlying graphics
 package. This may be surprising, given that AST could itself handle this
 sort of projection. But the decision was taken so that Plot3D graphics
@@ -1833,7 +1834,7 @@ with a Mapping that connects that Frame to one of the Frames in the WCS
 FrameSet.
 
 As a trivial example, consider an application that requires 1-dimensional
-data but does not care what that one dimension represents, it creates a
+data but does not care what that one dimension represents. It creates a
 1-dimensional basic Frame to act as a template, leaving all Frame
 attributes at their default values in the template (default values act as
 wild-cards during the searching process). The application then passes
@@ -1846,7 +1847,7 @@ but will not match Frames with more than one dimension.
 A specialised application for processing spectral data cubes may use for
 its template a 3-dimensional CmpFrame (compound Frame) containing a
 2-dimensional SkyFrame (celestial longitude/latitude axes) and
-1-dimensional SpecFrame (a spectral axis). The \texttt{astFindFrame} will then
+1-dimensional SpecFrame (a spectral axis). The \texttt{astFindFrame} method will then
 only match 3-dimensional Frames with similar properties. Note, if the
 System attribute is set to specific values in the SkyFrame and/or
 SpecFrame contained within the template, then the Mapping returned by
